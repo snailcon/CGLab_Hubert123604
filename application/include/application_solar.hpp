@@ -4,6 +4,7 @@
 #include "application.hpp"
 #include "model.hpp"
 #include "structs.hpp"
+#include "scenegraph.hpp"
 
 // gpu representation of model
 class ApplicationSolar : public Application {
@@ -33,6 +34,8 @@ class ApplicationSolar : public Application {
   // upload view matrix
   void uploadView();
 
+  void initializeSolarScenegraph();
+
   // cpu representation of model
   model_object planet_object;
   
@@ -40,6 +43,8 @@ class ApplicationSolar : public Application {
   glm::fmat4 m_view_transform;
   // camera projection matrix
   glm::fmat4 m_view_projection;
+
+  SceneGraph scenegraph = SceneGraph::getInstance();
 };
 
 #endif

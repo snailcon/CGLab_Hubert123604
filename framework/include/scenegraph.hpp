@@ -2,8 +2,11 @@
 #define SCENEGRAPH_HPP
 
 #include <string>
+#include <iostream>
 
 #include "node.hpp"
+#include "geometry_node.hpp"
+#include "camera_node.hpp"
 
 class SceneGraph {
 public:

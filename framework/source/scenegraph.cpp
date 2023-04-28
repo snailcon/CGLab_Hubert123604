@@ -22,5 +22,5 @@ void SceneGraph::setRoot(Node const& node) {
 }
 
 void SceneGraph::printGraph() {
-
+    root_.printSubGraph(std::cout);
 }

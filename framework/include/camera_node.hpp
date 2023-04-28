@@ -16,8 +16,8 @@ public:
     glm::mat4 getProjectionMatrix() const;
     void setProjectionMatrix(glm::mat4 const& projectionMatrix);
 private:
-    bool isPerspective_;
-    bool isEnabled_;
+    bool isPerspective_ = true;
+    bool isEnabled_ = false;
     glm::mat4 projectionMatrix_;
 };
 

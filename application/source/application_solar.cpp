@@ -25,6 +25,7 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
  ,m_view_transform{glm::translate(glm::fmat4{}, glm::fvec3{0.0f, 0.0f, 4.0f})}
  ,m_view_projection{utils::calculate_projection_matrix(initial_aspect_ratio)}
 {
+  initializeSolarScenegraph();
   initializeGeometry();
   initializeShaderPrograms();
 }
@@ -130,6 +131,56 @@ void ApplicationSolar::initializeGeometry() {
   planet_object.num_elements = GLsizei(planet_model.indices.size());
 }
 
+void ApplicationSolar::initializeSolarScenegraph() {
+  model planet_model = model_loader::obj(m_resource_path + "models/sphere.obj", model::NORMAL);
+
+  Node root("Root");
+  CameraNode camera("Camera", utils::calculate_projection_matrix(initial_aspect_ratio));
+  Node merc_hold("merc. hold");
+  Node venu_hold("venu. hold");
+  Node eart_hold("eart. hold");
+  Node mars_hold("mars. hold");
+  Node jupi_hold("jupi. hold");
+  Node satu_hold("satu. hold");
+  Node uran_hold("uran. hold");
+  Node nept_hold("nept. hold");
+  GeometryNode merc_geom("merc. geom", planet_model);
+  GeometryNode venu_geom("venu. geom", planet_model);
+  GeometryNode eart_geom("eart. geom", planet_model);
+  GeometryNode mars_geom("mars. geom", planet_model);
+  GeometryNode jupi_geom("jupi. geom", planet_model);
+  GeometryNode satu_geom("satu. geom", planet_model);
+  GeometryNode uran_geom("uran. geom", planet_model);
+  GeometryNode nept_geom("nept. geom", planet_model);
+
+  Node moon_hold("moon hold");
+  GeometryNode moon_geom("moon geom", planet_model);
+
+  root.addChild(camera);
+  root.addChild(merc_hold);
+  root.addChild(venu_hold);
+  root.addChild(eart_hold);
+  root.addChild(mars_hold);
+  root.addChild(jupi_hold);
+  root.addChild(satu_hold);
+  root.addChild(uran_hold);
+  root.addChild(nept_hold);
+  merc_hold.addChild(merc_geom);
+  venu_hold.addChild(venu_geom);
+  eart_hold.addChild(eart_geom);
+  mars_hold.addChild(mars_geom);
+  jupi_hold.addChild(jupi_geom);
+  satu_hold.addChild(satu_geom);
+  uran_hold.addChild(uran_geom);
+  nept_hold.addChild(nept_geom);
+
+  eart_hold.addChild(moon_hold);
+  moon_hold.addChild(moon_geom);
+
+  scenegraph.setRoot(root);
+  scenegraph.printGraph();
+}
+
 ///////////////////////////// callback functions for window events ////////////
 // handle key input
 void ApplicationSolar::keyCallback(int key, int action, int mods) {
@@ -151,7 +202,8 @@ void ApplicationSolar::mouseCallback(double pos_x, double pos_y) {
 //handle resizing
 void ApplicationSolar::resizeCallback(unsigned width, unsigned height) {
   // recalculate projection matrix for new aspect ration
-  m_view_projection = utils::calculate_projection_matrix(float(width) / float(height));
+  ((CameraNode*)(scenegraph.getRoot().getChild("Camera")))->setProjectionMatrix(utils::calculate_projection_matrix(float(width) / float(height)));
+  m_view_projection = ((CameraNode*)(scenegraph.getRoot().getChild("Camera")))->getProjectionMatrix();
   // upload new projection matrix
   uploadProjection();
 }
