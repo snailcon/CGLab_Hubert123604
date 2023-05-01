@@ -16,11 +16,15 @@ class ApplicationSolar : public Application {
 
   // react to key input
   void keyCallback(int key, int action, int mods);
+  // process key input per frame instead of on callback
+  void processKeyInput(GLFWwindow* window);
   //handle delta mouse movement input
   void mouseCallback(double pos_x, double pos_y);
   //handle resizing
   void resizeCallback(unsigned width, unsigned height);
 
+  // update all objects / deltaTime
+  void update(GLFWwindow* window);
   // draw all objects
   void render() const;
 
@@ -45,6 +49,9 @@ class ApplicationSolar : public Application {
   glm::fmat4 m_view_projection;
 
   SceneGraph scenegraph = SceneGraph::getInstance();
+
+  float deltaTime = 0.0f;
+  float lastFrame = 0.0f;
 };
 
 #endif

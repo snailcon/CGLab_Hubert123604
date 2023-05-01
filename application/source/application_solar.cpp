@@ -36,29 +36,23 @@ ApplicationSolar::~ApplicationSolar() {
   glDeleteVertexArrays(1, &planet_object.vertex_AO);
 }
 
+void ApplicationSolar::update(GLFWwindow* window) {
+  float currentFrame = glfwGetTime();
+  deltaTime = currentFrame - lastFrame;
+  lastFrame = currentFrame;
+
+  processKeyInput(window);
+}
+
 void ApplicationSolar::render() const {
   // bind shader to upload uniforms
   glUseProgram(m_shaders.at("planet").handle);
 
-  // glm::fmat4 model_matrix = glm::rotate(glm::fmat4{}, float(glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
-  // model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f});
-  // glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ModelMatrix"),
-  //                    1, GL_FALSE, glm::value_ptr(model_matrix));
-
-  // // extra matrix for normal transformation to keep them orthogonal to surface
-  // glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
-  // glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("NormalMatrix"),
-  //                    1, GL_FALSE, glm::value_ptr(normal_matrix));
-
-  // // bind the VAO to draw
-  // glBindVertexArray(planet_object.vertex_AO);
-
-  // // draw bound vertex array using bound shader
-  // glDrawElements(planet_object.draw_mode, planet_object.num_elements, model::INDEX.type, NULL);
-
   std::vector<GeometryNode*> geom_nodes = scenegraph.getGeomNodes();
   for (GeometryNode* geom : geom_nodes) {
-    glm::fmat4 model_matrix = geom->getWorldTransform();
+    // glm::fmat4 model_matrix = geom->getWorldTransform();
+    glm::fmat4 model_matrix = glm::rotate(glm::fmat4{}, float(glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
+    model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f});
     glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ModelMatrix"),
                       1, GL_FALSE, glm::value_ptr(model_matrix));
 
@@ -68,16 +62,18 @@ void ApplicationSolar::render() const {
                       1, GL_FALSE, glm::value_ptr(normal_matrix));
 
     // bind the VAO to draw
-    glBindVertexArray(planet_object.vertex_AO);
+    glBindVertexArray(geom->getGeometry().vertex_AO);
 
     // draw bound vertex array using bound shader
-    glDrawElements(planet_object.draw_mode, planet_object.num_elements, model::INDEX.type, NULL);
+    glDrawElements(geom->getGeometry().draw_mode, geom->getGeometry().num_elements, model::INDEX.type, NULL);
   }
 }
 
 void ApplicationSolar::uploadView() {
   // vertices are transformed in camera space, so camera transform must be inverted
-  glm::fmat4 view_matrix = glm::inverse(m_view_transform);
+  // glm::fmat4 view_matrix = glm::inverse(m_view_transform);
+  // glm::lookAt() is used for the view viewmatrix, it's already in the correct form
+  glm::fmat4 view_matrix = m_view_transform;
   // upload matrix to gpu
   glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ViewMatrix"),
                      1, GL_FALSE, glm::value_ptr(view_matrix));
@@ -201,19 +197,36 @@ void ApplicationSolar::initializeSolarScenegraph() {
 ///////////////////////////// callback functions for window events ////////////
 // handle key input
 void ApplicationSolar::keyCallback(int key, int action, int mods) {
-  if (key == GLFW_KEY_W  && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-    m_view_transform = glm::translate(m_view_transform, glm::fvec3{0.0f, 0.0f, -0.1f});
-    uploadView();
-  }
-  else if (key == GLFW_KEY_S  && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-    m_view_transform = glm::translate(m_view_transform, glm::fvec3{0.0f, 0.0f, 0.1f});
-    uploadView();
-  }
+  
+}
+
+// handle per frame key input
+void ApplicationSolar::processKeyInput(GLFWwindow* window) {
+  CameraNode* cam = ((CameraNode*)(scenegraph.getRoot()->getChild("Camera")));
+  
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    cam->processKeyboard(FORWARD, deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    cam->processKeyboard(BACKWARD, deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    cam->processKeyboard(LEFT, deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    cam->processKeyboard(RIGHT, deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    cam->processKeyboard(UP, deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    cam->processKeyboard(DOWN, deltaTime);
+  
+  m_view_transform = cam->getViewMatrix();
+  uploadView();
 }
 
 //handle delta mouse movement input
 void ApplicationSolar::mouseCallback(double pos_x, double pos_y) {
-  // mouse handling
+  CameraNode* cam = ((CameraNode*)(scenegraph.getRoot()->getChild("Camera")));
+  cam->processMouse(pos_x, pos_y);
+  m_view_transform = cam->getViewMatrix();
+  uploadView();
 }
 
 //handle resizing
