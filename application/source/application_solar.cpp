@@ -25,9 +25,9 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
  ,m_view_transform{glm::translate(glm::fmat4{}, glm::fvec3{0.0f, 0.0f, 4.0f})}
  ,m_view_projection{utils::calculate_projection_matrix(initial_aspect_ratio)}
 {
-  initializeSolarScenegraph();
   initializeGeometry();
   initializeShaderPrograms();
+  initializeSolarScenegraph();
 }
 
 ApplicationSolar::~ApplicationSolar() {
@@ -40,21 +40,39 @@ void ApplicationSolar::render() const {
   // bind shader to upload uniforms
   glUseProgram(m_shaders.at("planet").handle);
 
-  glm::fmat4 model_matrix = glm::rotate(glm::fmat4{}, float(glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
-  model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f});
-  glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ModelMatrix"),
-                     1, GL_FALSE, glm::value_ptr(model_matrix));
+  // glm::fmat4 model_matrix = glm::rotate(glm::fmat4{}, float(glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
+  // model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f});
+  // glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ModelMatrix"),
+  //                    1, GL_FALSE, glm::value_ptr(model_matrix));
 
-  // extra matrix for normal transformation to keep them orthogonal to surface
-  glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
-  glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("NormalMatrix"),
-                     1, GL_FALSE, glm::value_ptr(normal_matrix));
+  // // extra matrix for normal transformation to keep them orthogonal to surface
+  // glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
+  // glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("NormalMatrix"),
+  //                    1, GL_FALSE, glm::value_ptr(normal_matrix));
 
-  // bind the VAO to draw
-  glBindVertexArray(planet_object.vertex_AO);
+  // // bind the VAO to draw
+  // glBindVertexArray(planet_object.vertex_AO);
 
-  // draw bound vertex array using bound shader
-  glDrawElements(planet_object.draw_mode, planet_object.num_elements, model::INDEX.type, NULL);
+  // // draw bound vertex array using bound shader
+  // glDrawElements(planet_object.draw_mode, planet_object.num_elements, model::INDEX.type, NULL);
+
+  std::vector<GeometryNode*> geom_nodes = scenegraph.getGeomNodes();
+  for (GeometryNode* geom : geom_nodes) {
+    glm::fmat4 model_matrix = geom->getWorldTransform();
+    glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ModelMatrix"),
+                      1, GL_FALSE, glm::value_ptr(model_matrix));
+
+    // extra matrix for normal transformation to keep them orthogonal to surface
+    glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
+    glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("NormalMatrix"),
+                      1, GL_FALSE, glm::value_ptr(normal_matrix));
+
+    // bind the VAO to draw
+    glBindVertexArray(planet_object.vertex_AO);
+
+    // draw bound vertex array using bound shader
+    glDrawElements(planet_object.draw_mode, planet_object.num_elements, model::INDEX.type, NULL);
+  }
 }
 
 void ApplicationSolar::uploadView() {
@@ -132,50 +150,49 @@ void ApplicationSolar::initializeGeometry() {
 }
 
 void ApplicationSolar::initializeSolarScenegraph() {
-  model planet_model = model_loader::obj(m_resource_path + "models/sphere.obj", model::NORMAL);
 
-  Node root("Root");
-  CameraNode camera("Camera", utils::calculate_projection_matrix(initial_aspect_ratio));
-  Node merc_hold("merc. hold");
-  Node venu_hold("venu. hold");
-  Node eart_hold("eart. hold");
-  Node mars_hold("mars. hold");
-  Node jupi_hold("jupi. hold");
-  Node satu_hold("satu. hold");
-  Node uran_hold("uran. hold");
-  Node nept_hold("nept. hold");
-  GeometryNode merc_geom("merc. geom", planet_model);
-  GeometryNode venu_geom("venu. geom", planet_model);
-  GeometryNode eart_geom("eart. geom", planet_model);
-  GeometryNode mars_geom("mars. geom", planet_model);
-  GeometryNode jupi_geom("jupi. geom", planet_model);
-  GeometryNode satu_geom("satu. geom", planet_model);
-  GeometryNode uran_geom("uran. geom", planet_model);
-  GeometryNode nept_geom("nept. geom", planet_model);
+  std::shared_ptr<Node> root = std::make_shared<Node>("Root");
+  std::shared_ptr<CameraNode> camera = std::make_shared<CameraNode>("Camera", utils::calculate_projection_matrix(initial_aspect_ratio));
+  std::shared_ptr<Node> merc_hold = std::make_shared<Node>("merc. hold");
+  std::shared_ptr<Node> venu_hold = std::make_shared<Node>("venu. hold");
+  std::shared_ptr<Node> eart_hold = std::make_shared<Node>("eart. hold");
+  std::shared_ptr<Node> mars_hold = std::make_shared<Node>("mars. hold");
+  std::shared_ptr<Node> jupi_hold = std::make_shared<Node>("jupi. hold");
+  std::shared_ptr<Node> satu_hold = std::make_shared<Node>("satu. hold");
+  std::shared_ptr<Node> uran_hold = std::make_shared<Node>("uran. hold");
+  std::shared_ptr<Node> nept_hold = std::make_shared<Node>("nept. hold");
+  std::shared_ptr<GeometryNode> merc_geom = std::make_shared<GeometryNode>("merc. geom", planet_object);
+  std::shared_ptr<GeometryNode> venu_geom = std::make_shared<GeometryNode>("venu. geom", planet_object);
+  std::shared_ptr<GeometryNode> eart_geom = std::make_shared<GeometryNode>("eart. geom", planet_object);
+  std::shared_ptr<GeometryNode> mars_geom = std::make_shared<GeometryNode>("mars. geom", planet_object);
+  std::shared_ptr<GeometryNode> jupi_geom = std::make_shared<GeometryNode>("jupi. geom", planet_object);
+  std::shared_ptr<GeometryNode> satu_geom = std::make_shared<GeometryNode>("satu. geom", planet_object);
+  std::shared_ptr<GeometryNode> uran_geom = std::make_shared<GeometryNode>("uran. geom", planet_object);
+  std::shared_ptr<GeometryNode> nept_geom = std::make_shared<GeometryNode>("nept. geom", planet_object);
 
-  Node moon_hold("moon hold");
-  GeometryNode moon_geom("moon geom", planet_model);
+  std::shared_ptr<Node> moon_hold = std::make_shared<Node>("moon. hold");
+  std::shared_ptr<GeometryNode> moon_geom = std::make_shared<GeometryNode>("moon. geom", planet_object);
 
-  root.addChild(camera);
-  root.addChild(merc_hold);
-  root.addChild(venu_hold);
-  root.addChild(eart_hold);
-  root.addChild(mars_hold);
-  root.addChild(jupi_hold);
-  root.addChild(satu_hold);
-  root.addChild(uran_hold);
-  root.addChild(nept_hold);
-  merc_hold.addChild(merc_geom);
-  venu_hold.addChild(venu_geom);
-  eart_hold.addChild(eart_geom);
-  mars_hold.addChild(mars_geom);
-  jupi_hold.addChild(jupi_geom);
-  satu_hold.addChild(satu_geom);
-  uran_hold.addChild(uran_geom);
-  nept_hold.addChild(nept_geom);
+  root->addChild(camera);
+  root->addChild(merc_hold);
+  root->addChild(venu_hold);
+  root->addChild(eart_hold);
+  root->addChild(mars_hold);
+  root->addChild(jupi_hold);
+  root->addChild(satu_hold);
+  root->addChild(uran_hold);
+  root->addChild(nept_hold);
+  merc_hold->addChild(merc_geom);
+  venu_hold->addChild(venu_geom);
+  eart_hold->addChild(eart_geom);
+  mars_hold->addChild(mars_geom);
+  jupi_hold->addChild(jupi_geom);
+  satu_hold->addChild(satu_geom);
+  uran_hold->addChild(uran_geom);
+  nept_hold->addChild(nept_geom);
 
-  eart_hold.addChild(moon_hold);
-  moon_hold.addChild(moon_geom);
+  eart_hold->addChild(moon_hold);
+  moon_hold->addChild(moon_geom);
 
   scenegraph.setRoot(root);
   scenegraph.printGraph();
@@ -202,8 +219,8 @@ void ApplicationSolar::mouseCallback(double pos_x, double pos_y) {
 //handle resizing
 void ApplicationSolar::resizeCallback(unsigned width, unsigned height) {
   // recalculate projection matrix for new aspect ration
-  ((CameraNode*)(scenegraph.getRoot().getChild("Camera")))->setProjectionMatrix(utils::calculate_projection_matrix(float(width) / float(height)));
-  m_view_projection = ((CameraNode*)(scenegraph.getRoot().getChild("Camera")))->getProjectionMatrix();
+  ((CameraNode*)(scenegraph.getRoot()->getChild("Camera")))->setProjectionMatrix(utils::calculate_projection_matrix(float(width) / float(height)));
+  m_view_projection = ((CameraNode*)(scenegraph.getRoot()->getChild("Camera")))->getProjectionMatrix();
   // upload new projection matrix
   uploadProjection();
 }

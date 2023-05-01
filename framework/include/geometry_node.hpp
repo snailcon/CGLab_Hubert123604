@@ -4,16 +4,17 @@
 #include <string>
 
 #include "node.hpp"
-#include "model.hpp"
+#include "structs.hpp"
 
 class GeometryNode : public Node {
 public:
-    GeometryNode(std::string const& name, model const& geometry);
+    GeometryNode(std::string const& name, model_object const& geometry);
 
-    model getGeometry() const;
-    void setGeometry(model const& geometry);
+    model_object getGeometry() const;
+    void setGeometry(model_object const& geometry);
+    void printSubGraph(std::ostream& out) const;
 private:
-    model model_;
+    model_object model_;
 };
 
 #endif

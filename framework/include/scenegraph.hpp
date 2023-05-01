@@ -1,8 +1,10 @@
 #ifndef SCENEGRAPH_HPP
 #define SCENEGRAPH_HPP
 
+#include <vector>
 #include <string>
 #include <iostream>
+#include <memory>
 
 #include "node.hpp"
 #include "geometry_node.hpp"
@@ -18,15 +20,17 @@ public:
 
     std::string getName() const;
     void setName(std::string const& name);
-    Node getRoot() const;
-    void setRoot(Node const& node);
+    Node* getRoot() const;
+    void setRoot(std::shared_ptr<Node> node);
+
+    std::vector<GeometryNode*> getGeomNodes() const;
 
     void printGraph();
 private:
     SceneGraph() {};
 
     std::string name_;
-    Node root_;
+    std::shared_ptr<Node> root_;
 };
 
 #endif

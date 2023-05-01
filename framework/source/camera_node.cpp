@@ -23,3 +23,8 @@ glm::mat4 CameraNode::getProjectionMatrix() const {
 void CameraNode::setProjectionMatrix(glm::mat4 const& projectionMatrix) {
     projectionMatrix_ = projectionMatrix;
 }
+
+void CameraNode::printSubGraph(std::ostream& out) const {
+    out<<"cam: ";
+    Node::printSubGraph(out);
+}

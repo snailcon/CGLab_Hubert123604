@@ -15,6 +15,8 @@ public:
 
     glm::mat4 getProjectionMatrix() const;
     void setProjectionMatrix(glm::mat4 const& projectionMatrix);
+    
+    void printSubGraph(std::ostream& out) const;
 private:
     bool isPerspective_ = true;
     bool isEnabled_ = false;
