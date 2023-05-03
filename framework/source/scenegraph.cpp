@@ -24,10 +24,12 @@ void SceneGraph::setRoot(std::shared_ptr<Node> node) {
 std::vector<GeometryNode*> SceneGraph::getGeomNodes() const{
     std::vector<Node*> all_nodes;
     
+    // recursive function to get all nodes
     root_->getChildren(all_nodes);
 
     std::vector<GeometryNode*> geom_nodes;
 
+    // filter out non-GeometryNodes with dynamic typing
     for (auto& child : all_nodes) {
         GeometryNode* geom_node = dynamic_cast<GeometryNode*>(child);
         if (geom_node != nullptr) {

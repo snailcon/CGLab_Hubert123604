@@ -37,12 +37,16 @@ ApplicationSolar::~ApplicationSolar() {
 }
 
 void ApplicationSolar::update(GLFWwindow* window) {
+  // update the deltaTime for the current frame
   float currentFrame = glfwGetTime();
   deltaTime = currentFrame - lastFrame;
   lastFrame = currentFrame;
 
+  // process keyboard inputs for movement
   processKeyInput(window);
 
+  // update animation status of planets
+  // -----------------------------------------------------------------------------------------------------------------------------
   Node* merc_hold = scenegraph.getRoot()->getChild("merc. hold");
   Node* venu_hold = scenegraph.getRoot()->getChild("venu. hold");
   Node* eart_hold = scenegraph.getRoot()->getChild("eart. hold");
@@ -54,6 +58,7 @@ void ApplicationSolar::update(GLFWwindow* window) {
 
   Node* moon_hold = eart_hold->getChild("moon. hold");
 
+  // set the rotation of every planet
   glm::mat4 merc_transf = glm::rotate(glm::mat4(1.0f), glm::radians(9.9f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
   glm::mat4 venu_transf = glm::rotate(glm::mat4(1.0f), glm::radians(8.1f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
   glm::mat4 eart_transf = glm::rotate(glm::mat4(1.0f), glm::radians(7.8f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -63,8 +68,10 @@ void ApplicationSolar::update(GLFWwindow* window) {
   glm::mat4 uran_transf = glm::rotate(glm::mat4(1.0f), glm::radians(1.5f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
   glm::mat4 nept_transf = glm::rotate(glm::mat4(1.0f), glm::radians(1.0f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
 
+  // and moon
   glm::mat4 moon_transf = glm::rotate(glm::mat4(1.0f), glm::radians(50.0f * (float)glfwGetTime()), glm::vec3(0.0f, 0.0f, 1.0f));
 
+  // offset them from the center (and based on the rotation)
   merc_transf = glm::translate(merc_transf, glm::vec3(1.5f, 0.0f, 0.0f));
   venu_transf = glm::translate(venu_transf, glm::vec3(2.5f, 0.0f, 0.0f));
   eart_transf = glm::translate(eart_transf, glm::vec3(4.0f, 0.0f, 0.0f));
@@ -76,6 +83,7 @@ void ApplicationSolar::update(GLFWwindow* window) {
 
   moon_transf = glm::translate(moon_transf, glm::vec3(1.0f, 0.0f, 0.0f));
 
+  // set the transforms
   merc_hold->setLocalTransform(merc_transf);
   venu_hold->setLocalTransform(venu_transf);
   eart_hold->setLocalTransform(eart_transf);
@@ -86,16 +94,17 @@ void ApplicationSolar::update(GLFWwindow* window) {
   nept_hold->setLocalTransform(nept_transf);
 
   moon_hold->setLocalTransform(moon_transf);
+  // -----------------------------------------------------------------------------------------------------------------------------
 }
 
 void ApplicationSolar::render() const {
   // bind shader to upload uniforms
   glUseProgram(m_shaders.at("planet").handle);
 
+  // get all renderable nodes
   std::vector<GeometryNode*> geom_nodes = scenegraph.getGeomNodes();
   for (GeometryNode* geom : geom_nodes) {
-    // glm::fmat4 model_matrix = geom->getWorldTransform();
-    glm::fmat4 model_matrix = geom->getWorldTransform();
+    glm::fmat4 model_matrix = geom->getWorldTransform(); // use their model matrices for rendering
     glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ModelMatrix"),
                       1, GL_FALSE, glm::value_ptr(model_matrix));
 
@@ -104,6 +113,7 @@ void ApplicationSolar::render() const {
     glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("NormalMatrix"),
                       1, GL_FALSE, glm::value_ptr(normal_matrix));
 
+    // the gpu representation is saved in the node, so it can be used here
     // bind the VAO to draw
     glBindVertexArray(geom->getGeometry().vertex_AO);
 
@@ -190,6 +200,8 @@ void ApplicationSolar::initializeGeometry() {
 
 void ApplicationSolar::initializeSolarScenegraph() {
 
+  // set up all nodes for the scenegraph
+  // ------------------------------------------------------------------------------------------------------------------------------------
   std::shared_ptr<Node> root = std::make_shared<Node>("Root");
   std::shared_ptr<CameraNode> camera = std::make_shared<CameraNode>("Camera", utils::calculate_projection_matrix(initial_aspect_ratio));
 
@@ -205,6 +217,7 @@ void ApplicationSolar::initializeSolarScenegraph() {
   std::shared_ptr<Node> uran_hold = std::make_shared<Node>("uran. hold");
   std::shared_ptr<Node> nept_hold = std::make_shared<Node>("nept. hold");
 
+  // hijack the planet_object to use as the model for every geometry node
   std::shared_ptr<GeometryNode> merc_geom = std::make_shared<GeometryNode>("merc. geom", planet_object);
   std::shared_ptr<GeometryNode> venu_geom = std::make_shared<GeometryNode>("venu. geom", planet_object);
   std::shared_ptr<GeometryNode> eart_geom = std::make_shared<GeometryNode>("eart. geom", planet_object);
@@ -217,6 +230,10 @@ void ApplicationSolar::initializeSolarScenegraph() {
   std::shared_ptr<Node> moon_hold = std::make_shared<Node>("moon. hold");
   std::shared_ptr<GeometryNode> moon_geom = std::make_shared<GeometryNode>("moon. geom", planet_object);
 
+  // ------------------------------------------------------------------------------------------------------------------------------------
+
+  // set up the hierachy
+  // ------------------------------------------------------------------------------------------------------------------------------------
   root->addChild(camera);
   root->addChild(sun_hold);
   root->addChild(merc_hold);
@@ -239,7 +256,10 @@ void ApplicationSolar::initializeSolarScenegraph() {
 
   eart_hold->addChild(moon_hold);
   moon_hold->addChild(moon_geom);
+  // ------------------------------------------------------------------------------------------------------------------------------------
 
+  // set up initial scaling of the models
+  // ------------------------------------------------------------------------------------------------------------------------------------
   merc_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(0.1f)));
   venu_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(0.2f)));
   eart_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(0.5f)));
@@ -250,21 +270,28 @@ void ApplicationSolar::initializeSolarScenegraph() {
   nept_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)));
 
   moon_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(0.1f)));
+  // ------------------------------------------------------------------------------------------------------------------------------------
 
+  // set the root
   scenegraph.setRoot(root);
+
+  // debug: print some interpretation of the scenegraph
   scenegraph.printGraph();
 }
 
 ///////////////////////////// callback functions for window events ////////////
 // handle key input
 void ApplicationSolar::keyCallback(int key, int action, int mods) {
-  
+  // using this to keep track of keystates is probably better than hijacking the window and using glfwGetKey
+  // but the other solution was easier
 }
 
 // handle per frame key input
 void ApplicationSolar::processKeyInput(GLFWwindow* window) {
+  // get a pointer to the camera (if multiple: this should get the enabled camera)
   CameraNode* cam = ((CameraNode*)(scenegraph.getRoot()->getChild("Camera")));
   
+  // if given key is held down the camera processes it
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     cam->processKeyboard(FORWARD, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -278,14 +305,19 @@ void ApplicationSolar::processKeyInput(GLFWwindow* window) {
   if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
     cam->processKeyboard(DOWN, deltaTime);
   
+  // upload the updated view matrix
   m_view_transform = cam->getViewMatrix();
   uploadView();
 }
 
 //handle delta mouse movement input
 void ApplicationSolar::mouseCallback(double pos_x, double pos_y) {
+  // get a pointer to the camera (if multiple: this should get the enabled camera)
   CameraNode* cam = ((CameraNode*)(scenegraph.getRoot()->getChild("Camera")));
+  // pos_x, pos_y are offsets, since the mouse is reset to 0,0 every frame
   cam->processMouse(pos_x, pos_y);
+
+  // upload the updated view matrix
   m_view_transform = cam->getViewMatrix();
   uploadView();
 }
@@ -293,8 +325,11 @@ void ApplicationSolar::mouseCallback(double pos_x, double pos_y) {
 //handle resizing
 void ApplicationSolar::resizeCallback(unsigned width, unsigned height) {
   // recalculate projection matrix for new aspect ration
-  ((CameraNode*)(scenegraph.getRoot()->getChild("Camera")))->setProjectionMatrix(utils::calculate_projection_matrix(float(width) / float(height)));
-  m_view_projection = ((CameraNode*)(scenegraph.getRoot()->getChild("Camera")))->getProjectionMatrix();
+  // get a pointer to the camera (if multiple: this should get the enabled camera)
+  CameraNode* cam = ((CameraNode*)(scenegraph.getRoot()->getChild("Camera")));
+  // use given utils to calculate the correct projection matrix
+  cam->setProjectionMatrix(utils::calculate_projection_matrix(float(width) / float(height)));
+  m_view_projection = cam->getProjectionMatrix();
   // upload new projection matrix
   uploadProjection();
 }

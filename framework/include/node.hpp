@@ -29,7 +29,6 @@ public:
 
     glm::mat4 getWorldTransform() const;
     
-
     void addChild(std::shared_ptr<Node> node);
     void removeChild(std::string const& name);
 

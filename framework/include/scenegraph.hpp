@@ -23,6 +23,7 @@ public:
     Node* getRoot() const;
     void setRoot(std::shared_ptr<Node> node);
 
+    // helper-method to only get nodes with geometry for rendering
     std::vector<GeometryNode*> getGeomNodes() const;
 
     void printGraph();

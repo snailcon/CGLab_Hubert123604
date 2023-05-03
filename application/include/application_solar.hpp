@@ -48,9 +48,11 @@ class ApplicationSolar : public Application {
   // camera projection matrix
   glm::fmat4 m_view_projection;
 
+  // instance of the scenegraph
   SceneGraph scenegraph = SceneGraph::getInstance();
 
   float deltaTime = 0.0f;
+  // required for deltaTime
   float lastFrame = 0.0f;
 };
 

@@ -13,6 +13,7 @@
 #define PI 3.14159265359
 #define DEG2RAD (PI / 180.0)
 
+// using enums so it's easier to pass values to keyboard process
 enum Camera_Movement {
     FORWARD,
     BACKWARD,
@@ -22,6 +23,8 @@ enum Camera_Movement {
     DOWN
 };
 
+// CameraNode holds information on location, direction and projection
+// is also used to process mouse and keyboard inputs for movement/mouselook
 class CameraNode : public Node {
 public:
     CameraNode(std::string const& name, glm::mat4 const& projectionMatrix);
@@ -35,7 +38,9 @@ public:
 
     void setProjectionMatrix(glm::mat4 const& projectionMatrix);
     
+    // updates Position based on pressed direction (distance based on movespeed and deltaTime)
     void processKeyboard(Camera_Movement dir, float delta);
+    // updates Direction based on mouse movement (offsets)
     void processMouse(double pos_x, double pos_y);
 
     void printSubGraph(std::ostream& out) const;

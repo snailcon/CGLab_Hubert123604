@@ -6,6 +6,7 @@
 #include "node.hpp"
 #include "structs.hpp"
 
+// GeometryNode hold the gpu representation of a model
 class GeometryNode : public Node {
 public:
     GeometryNode(std::string const& name, model_object const& geometry);
