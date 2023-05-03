@@ -58,6 +58,15 @@ glm::mat4 Node::getLocalTransform() const {
 
 void Node::setLocalTransform(glm::mat4 const& localTransform) {
     localTransform_ = localTransform;
+    if (parent_ != nullptr) {
+        setWorldTransform(parent_->getWorldTransform() * localTransform_);
+    } else {
+        setWorldTransform(localTransform_);
+    }
+
+    for (auto&& child : children_) {
+        child->setWorldTransform(getWorldTransform() * child->getLocalTransform());
+    }
 }
 
 glm::mat4 Node::getWorldTransform() const {

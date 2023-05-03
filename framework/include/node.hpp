@@ -28,7 +28,7 @@ public:
     void setLocalTransform(glm::mat4 const& localTransform);
 
     glm::mat4 getWorldTransform() const;
-    void setWorldTransform(glm::mat4 const& localTransform);
+    
 
     void addChild(std::shared_ptr<Node> node);
     void removeChild(std::string const& name);
@@ -36,6 +36,7 @@ public:
     virtual void printSubGraph(std::ostream& out) const;
 
 protected:
+    void setWorldTransform(glm::mat4 const& worldTransform);
     void setParent(Node* node);
 
 private:
@@ -44,8 +45,8 @@ private:
     std::string name_;
     std::string path_;
     int depth_ = 0;
-    glm::mat4 localTransform_;
-    glm::mat4 worldTransform_;
+    glm::mat4 localTransform_ = glm::mat4(1.0f);
+    glm::mat4 worldTransform_ = glm::mat4(1.0f);
 };
 
 #endif

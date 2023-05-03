@@ -42,6 +42,50 @@ void ApplicationSolar::update(GLFWwindow* window) {
   lastFrame = currentFrame;
 
   processKeyInput(window);
+
+  Node* merc_hold = scenegraph.getRoot()->getChild("merc. hold");
+  Node* venu_hold = scenegraph.getRoot()->getChild("venu. hold");
+  Node* eart_hold = scenegraph.getRoot()->getChild("eart. hold");
+  Node* mars_hold = scenegraph.getRoot()->getChild("mars. hold");
+  Node* jupi_hold = scenegraph.getRoot()->getChild("jupi. hold");
+  Node* satu_hold = scenegraph.getRoot()->getChild("satu. hold");
+  Node* uran_hold = scenegraph.getRoot()->getChild("uran. hold");
+  Node* nept_hold = scenegraph.getRoot()->getChild("nept. hold");
+
+  Node* moon_hold = eart_hold->getChild("moon. hold");
+
+  glm::mat4 merc_transf = glm::rotate(glm::mat4(1.0f), glm::radians(9.9f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
+  glm::mat4 venu_transf = glm::rotate(glm::mat4(1.0f), glm::radians(8.1f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
+  glm::mat4 eart_transf = glm::rotate(glm::mat4(1.0f), glm::radians(7.8f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
+  glm::mat4 mars_transf = glm::rotate(glm::mat4(1.0f), glm::radians(5.7f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
+  glm::mat4 jupi_transf = glm::rotate(glm::mat4(1.0f), glm::radians(4.0f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
+  glm::mat4 satu_transf = glm::rotate(glm::mat4(1.0f), glm::radians(2.5f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
+  glm::mat4 uran_transf = glm::rotate(glm::mat4(1.0f), glm::radians(1.5f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
+  glm::mat4 nept_transf = glm::rotate(glm::mat4(1.0f), glm::radians(1.0f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
+
+  glm::mat4 moon_transf = glm::rotate(glm::mat4(1.0f), glm::radians(50.0f * (float)glfwGetTime()), glm::vec3(0.0f, 0.0f, 1.0f));
+
+  merc_transf = glm::translate(merc_transf, glm::vec3(1.5f, 0.0f, 0.0f));
+  venu_transf = glm::translate(venu_transf, glm::vec3(2.5f, 0.0f, 0.0f));
+  eart_transf = glm::translate(eart_transf, glm::vec3(4.0f, 0.0f, 0.0f));
+  mars_transf = glm::translate(mars_transf, glm::vec3(6.0f, 0.0f, 0.0f));
+  jupi_transf = glm::translate(jupi_transf, glm::vec3(9.0f, 0.0f, 0.0f));
+  satu_transf = glm::translate(satu_transf, glm::vec3(14.0f, 0.0f, 0.0f));
+  uran_transf = glm::translate(uran_transf, glm::vec3(30.0f, 0.0f, 0.0f));
+  nept_transf = glm::translate(nept_transf, glm::vec3(50.0f, 0.0f, 0.0f));
+
+  moon_transf = glm::translate(moon_transf, glm::vec3(1.0f, 0.0f, 0.0f));
+
+  merc_hold->setLocalTransform(merc_transf);
+  venu_hold->setLocalTransform(venu_transf);
+  eart_hold->setLocalTransform(eart_transf);
+  mars_hold->setLocalTransform(mars_transf);
+  jupi_hold->setLocalTransform(jupi_transf);
+  satu_hold->setLocalTransform(satu_transf);
+  uran_hold->setLocalTransform(uran_transf);
+  nept_hold->setLocalTransform(nept_transf);
+
+  moon_hold->setLocalTransform(moon_transf);
 }
 
 void ApplicationSolar::render() const {
@@ -51,8 +95,7 @@ void ApplicationSolar::render() const {
   std::vector<GeometryNode*> geom_nodes = scenegraph.getGeomNodes();
   for (GeometryNode* geom : geom_nodes) {
     // glm::fmat4 model_matrix = geom->getWorldTransform();
-    glm::fmat4 model_matrix = glm::rotate(glm::fmat4{}, float(glfwGetTime()), glm::fvec3{0.0f, 1.0f, 0.0f});
-    model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -1.0f});
+    glm::fmat4 model_matrix = geom->getWorldTransform();
     glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ModelMatrix"),
                       1, GL_FALSE, glm::value_ptr(model_matrix));
 
@@ -149,6 +192,10 @@ void ApplicationSolar::initializeSolarScenegraph() {
 
   std::shared_ptr<Node> root = std::make_shared<Node>("Root");
   std::shared_ptr<CameraNode> camera = std::make_shared<CameraNode>("Camera", utils::calculate_projection_matrix(initial_aspect_ratio));
+
+  std::shared_ptr<Node> sun_hold = std::make_shared<Node>("sun. hold");
+  std::shared_ptr<GeometryNode> sun_geom = std::make_shared<GeometryNode>("sun. geom", planet_object);
+
   std::shared_ptr<Node> merc_hold = std::make_shared<Node>("merc. hold");
   std::shared_ptr<Node> venu_hold = std::make_shared<Node>("venu. hold");
   std::shared_ptr<Node> eart_hold = std::make_shared<Node>("eart. hold");
@@ -157,6 +204,7 @@ void ApplicationSolar::initializeSolarScenegraph() {
   std::shared_ptr<Node> satu_hold = std::make_shared<Node>("satu. hold");
   std::shared_ptr<Node> uran_hold = std::make_shared<Node>("uran. hold");
   std::shared_ptr<Node> nept_hold = std::make_shared<Node>("nept. hold");
+
   std::shared_ptr<GeometryNode> merc_geom = std::make_shared<GeometryNode>("merc. geom", planet_object);
   std::shared_ptr<GeometryNode> venu_geom = std::make_shared<GeometryNode>("venu. geom", planet_object);
   std::shared_ptr<GeometryNode> eart_geom = std::make_shared<GeometryNode>("eart. geom", planet_object);
@@ -170,6 +218,7 @@ void ApplicationSolar::initializeSolarScenegraph() {
   std::shared_ptr<GeometryNode> moon_geom = std::make_shared<GeometryNode>("moon. geom", planet_object);
 
   root->addChild(camera);
+  root->addChild(sun_hold);
   root->addChild(merc_hold);
   root->addChild(venu_hold);
   root->addChild(eart_hold);
@@ -178,6 +227,7 @@ void ApplicationSolar::initializeSolarScenegraph() {
   root->addChild(satu_hold);
   root->addChild(uran_hold);
   root->addChild(nept_hold);
+  sun_hold->addChild(sun_geom);
   merc_hold->addChild(merc_geom);
   venu_hold->addChild(venu_geom);
   eart_hold->addChild(eart_geom);
@@ -189,6 +239,17 @@ void ApplicationSolar::initializeSolarScenegraph() {
 
   eart_hold->addChild(moon_hold);
   moon_hold->addChild(moon_geom);
+
+  merc_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(0.1f)));
+  venu_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(0.2f)));
+  eart_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(0.5f)));
+  mars_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(0.8f)));
+  jupi_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(1.2f)));
+  satu_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(1.6f)));
+  uran_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(2.2f)));
+  nept_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)));
+
+  moon_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(0.1f)));
 
   scenegraph.setRoot(root);
   scenegraph.printGraph();
