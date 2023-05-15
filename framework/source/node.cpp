@@ -59,12 +59,50 @@ int Node::getDepth() const {
     return depth_;
 }
 
+void Node::translate(glm::vec3 const& offset) {
+    translation_ = glm::translate(translation_, offset);
+    updateLocalTransform();
+}
+
+void Node::rotate(glm::vec3 const& axis, float angle) {
+    rotation_ = glm::rotate(rotation_, angle, axis);
+    updateLocalTransform();
+}
+
+void Node::setTranslation(glm::vec3 const& position) {
+    translation_ = glm::translate(glm::mat4(1.0f), position);
+    updateLocalTransform();
+}
+
+void Node::setRotation(glm::vec3 const& axis, float angle) {
+    rotation_ = glm::rotate(glm::mat4(1.0f), angle, axis);
+    updateLocalTransform();
+}
+
+void Node::setScale(glm::vec3 const& scale) {
+    scale_ = glm::scale(glm::mat4(1.0f), scale);
+    updateLocalTransform();
+}
+
+
+glm::mat4 Node::getTranslation() const {
+    return translation_;
+}
+
+glm::mat4 Node::getRotation() const {
+    return rotation_;
+}
+
+glm::mat4 Node::getScale() const {
+    return scale_;
+}
+
 glm::mat4 Node::getLocalTransform() const {
     return localTransform_;
 }
 
-void Node::setLocalTransform(glm::mat4 const& localTransform) {
-    localTransform_ = localTransform;
+void Node::updateLocalTransform() {
+    localTransform_ = translation_ * rotation_ * scale_;
     if (parent_ != nullptr) {
         setWorldTransform(parent_->getWorldTransform() * localTransform_);
     } else { // if no parent exists, the worldtransform is just the localtransform

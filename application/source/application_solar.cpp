@@ -58,42 +58,17 @@ void ApplicationSolar::update(GLFWwindow* window) {
 
   Node* moon_hold = eart_hold->getChild("moon. hold");
 
-  // set the rotation of every planet
-  glm::mat4 merc_transf = glm::rotate(glm::mat4(1.0f), glm::radians(9.9f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
-  glm::mat4 venu_transf = glm::rotate(glm::mat4(1.0f), glm::radians(8.1f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
-  glm::mat4 eart_transf = glm::rotate(glm::mat4(1.0f), glm::radians(7.8f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
-  glm::mat4 mars_transf = glm::rotate(glm::mat4(1.0f), glm::radians(5.7f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
-  glm::mat4 jupi_transf = glm::rotate(glm::mat4(1.0f), glm::radians(4.0f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
-  glm::mat4 satu_transf = glm::rotate(glm::mat4(1.0f), glm::radians(2.5f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
-  glm::mat4 uran_transf = glm::rotate(glm::mat4(1.0f), glm::radians(1.5f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
-  glm::mat4 nept_transf = glm::rotate(glm::mat4(1.0f), glm::radians(1.0f * (float)glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
+  // update the rotations
+  merc_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
+  venu_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 10.0f));
+  eart_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 15.0f));
+  mars_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 20.0f));
+  jupi_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 25.0f));
+  satu_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 30.0f));
+  uran_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 35.0f));
+  nept_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 40.0f));
 
-  // and moon
-  glm::mat4 moon_transf = glm::rotate(glm::mat4(1.0f), glm::radians(50.0f * (float)glfwGetTime()), glm::vec3(0.0f, 0.0f, 1.0f));
-
-  // offset them from the center (and based on the rotation)
-  merc_transf = glm::translate(merc_transf, glm::vec3(1.5f, 0.0f, 0.0f));
-  venu_transf = glm::translate(venu_transf, glm::vec3(2.5f, 0.0f, 0.0f));
-  eart_transf = glm::translate(eart_transf, glm::vec3(4.0f, 0.0f, 0.0f));
-  mars_transf = glm::translate(mars_transf, glm::vec3(6.0f, 0.0f, 0.0f));
-  jupi_transf = glm::translate(jupi_transf, glm::vec3(9.0f, 0.0f, 0.0f));
-  satu_transf = glm::translate(satu_transf, glm::vec3(14.0f, 0.0f, 0.0f));
-  uran_transf = glm::translate(uran_transf, glm::vec3(30.0f, 0.0f, 0.0f));
-  nept_transf = glm::translate(nept_transf, glm::vec3(50.0f, 0.0f, 0.0f));
-
-  moon_transf = glm::translate(moon_transf, glm::vec3(1.0f, 0.0f, 0.0f));
-
-  // set the transforms
-  merc_hold->setLocalTransform(merc_transf);
-  venu_hold->setLocalTransform(venu_transf);
-  eart_hold->setLocalTransform(eart_transf);
-  mars_hold->setLocalTransform(mars_transf);
-  jupi_hold->setLocalTransform(jupi_transf);
-  satu_hold->setLocalTransform(satu_transf);
-  uran_hold->setLocalTransform(uran_transf);
-  nept_hold->setLocalTransform(nept_transf);
-
-  moon_hold->setLocalTransform(moon_transf);
+  moon_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 20.0f));
   // -----------------------------------------------------------------------------------------------------------------------------
 }
 
@@ -260,16 +235,31 @@ void ApplicationSolar::initializeSolarScenegraph() {
 
   // set up initial scaling of the models
   // ------------------------------------------------------------------------------------------------------------------------------------
-  merc_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(0.1f)));
-  venu_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(0.2f)));
-  eart_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(0.5f)));
-  mars_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(0.8f)));
-  jupi_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(1.2f)));
-  satu_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(1.6f)));
-  uran_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(2.2f)));
-  nept_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)));
+  merc_geom->setScale(glm::vec3(0.1f));
+  venu_geom->setScale(glm::vec3(0.2f));
+  eart_geom->setScale(glm::vec3(0.5f));
+  mars_geom->setScale(glm::vec3(0.8f));
+  jupi_geom->setScale(glm::vec3(1.2f));
+  satu_geom->setScale(glm::vec3(1.6f));
+  uran_geom->setScale(glm::vec3(2.2f));
+  nept_geom->setScale(glm::vec3(3.0f));
 
-  moon_geom->setLocalTransform(glm::scale(glm::mat4(1.0f), glm::vec3(0.1f)));
+  moon_geom->setScale(glm::vec3(0.1f));
+  // ------------------------------------------------------------------------------------------------------------------------------------
+
+  // set up initial positions
+  // ------------------------------------------------------------------------------------------------------------------------------------
+  merc_geom->setTranslation(glm::vec3(1.5f, 0.0f, 0.0f));
+  venu_geom->setTranslation(glm::vec3(2.5f, 0.0f, 0.0f));
+  eart_geom->setTranslation(glm::vec3(4.0f, 0.0f, 0.0f));
+  mars_geom->setTranslation(glm::vec3(6.0f, 0.0f, 0.0f));
+  jupi_geom->setTranslation(glm::vec3(9.0f, 0.0f, 0.0f));
+  satu_geom->setTranslation(glm::vec3(14.0f, 0.0f, 0.0f));
+  uran_geom->setTranslation(glm::vec3(30.0f, 0.0f, 0.0f));
+  nept_geom->setTranslation(glm::vec3(50.0f, 0.0f, 0.0f));
+
+  moon_hold->setTranslation(glm::vec3(4.0f, 0.0f, 0.0f));
+  moon_geom->setTranslation(glm::vec3(1.0f, 0.0f, 0.0f));
   // ------------------------------------------------------------------------------------------------------------------------------------
 
   // set the root
