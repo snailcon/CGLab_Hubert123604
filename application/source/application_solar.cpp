@@ -55,8 +55,16 @@ void ApplicationSolar::update(GLFWwindow* window) {
   Node* satu_hold = scenegraph.getRoot()->getChild("satu. hold");
   Node* uran_hold = scenegraph.getRoot()->getChild("uran. hold");
   Node* nept_hold = scenegraph.getRoot()->getChild("nept. hold");
-
   Node* moon_hold = eart_hold->getChild("moon. hold");
+  Node* merc_geom = merc_hold->getChild("merc. geom");
+  Node* venu_geom = venu_hold->getChild("venu. geom");
+  Node* eart_geom = eart_hold->getChild("eart. geom");
+  Node* mars_geom = mars_hold->getChild("mars. geom");
+  Node* jupi_geom = jupi_hold->getChild("jupi. geom");
+  Node* satu_geom = satu_hold->getChild("satu. geom");
+  Node* uran_geom = uran_hold->getChild("uran. geom");
+  Node* nept_geom = nept_hold->getChild("nept. geom");
+  Node* moon_geom = moon_hold->getChild("moon. geom");
 
   // update the rotations
   merc_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
@@ -67,8 +75,17 @@ void ApplicationSolar::update(GLFWwindow* window) {
   satu_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 30.0f));
   uran_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 35.0f));
   nept_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 40.0f));
-
   moon_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 20.0f));
+
+  merc_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
+  venu_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
+  eart_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
+  mars_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
+  jupi_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
+  satu_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
+  uran_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
+  nept_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
+  moon_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
   // -----------------------------------------------------------------------------------------------------------------------------
 }
 
@@ -84,7 +101,7 @@ void ApplicationSolar::render() const {
                       1, GL_FALSE, glm::value_ptr(model_matrix));
 
     // extra matrix for normal transformation to keep them orthogonal to surface
-    glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
+    glm::fmat4 normal_matrix = glm::inverseTranspose(m_view_transform * model_matrix);
     glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("NormalMatrix"),
                       1, GL_FALSE, glm::value_ptr(normal_matrix));
 
@@ -245,6 +262,19 @@ void ApplicationSolar::initializeSolarScenegraph() {
   nept_geom->setScale(glm::vec3(3.0f));
 
   moon_geom->setScale(glm::vec3(0.1f));
+  // ------------------------------------------------------------------------------------------------------------------------------------
+
+  // set up initial rotations
+  // ------------------------------------------------------------------------------------------------------------------------------------
+  merc_hold->setRotation(glm::vec3(1.0f, 0.0f, 0.0f), glm::radians(0.0f));
+  venu_hold->setRotation(glm::vec3(1.0f, 0.0f, 0.0f), glm::radians(30.0f));
+  eart_hold->setRotation(glm::vec3(1.0f, 0.0f, 0.0f), glm::radians(60.0f));
+  mars_hold->setRotation(glm::vec3(1.0f, 0.0f, 0.0f), glm::radians(90.0f));
+  jupi_hold->setRotation(glm::vec3(1.0f, 0.0f, 0.0f), glm::radians(120.0f));
+  satu_hold->setRotation(glm::vec3(1.0f, 0.0f, 0.0f), glm::radians(150.0f));
+  uran_hold->setRotation(glm::vec3(1.0f, 0.0f, 0.0f), glm::radians(180.0f));
+  nept_hold->setRotation(glm::vec3(1.0f, 0.0f, 0.0f), glm::radians(210.0f));
+  moon_hold->setRotation(glm::vec3(1.0f, 0.0f, 0.0f), glm::radians(50.0f));
   // ------------------------------------------------------------------------------------------------------------------------------------
 
   // set up initial positions
