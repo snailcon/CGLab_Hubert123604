@@ -1,6 +1,9 @@
 #ifndef APPLICATION_SOLAR_HPP
 #define APPLICATION_SOLAR_HPP
 
+#include <vector>
+#include <random>
+
 #include "application.hpp"
 #include "model.hpp"
 #include "structs.hpp"
@@ -30,19 +33,24 @@ class ApplicationSolar : public Application {
 
  protected:
   void initializeShaderPrograms();
+  void initializeStars(int amount, float radius, float variance);
   void initializeGeometry();
   // update uniform values
-  void uploadUniforms();
+  void uploadUniforms(shader_program const& prog) const;
   // upload projection matrix
-  void uploadProjection();
+  void uploadProjection(shader_program const& prog) const;
   // upload view matrix
-  void uploadView();
+  void uploadView(shader_program const& prog) const;
 
   void initializeSolarScenegraph();
 
   // cpu representation of model
   model_object planet_object;
   
+  // stars container
+  std::vector<float> stars;
+  model_object stars_object;
+
   // camera transform matrix
   glm::fmat4 m_view_transform;
   // camera projection matrix

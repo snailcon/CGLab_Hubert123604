@@ -25,6 +25,7 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
  ,m_view_transform{glm::translate(glm::fmat4{}, glm::fvec3{0.0f, 0.0f, 4.0f})}
  ,m_view_projection{utils::calculate_projection_matrix(initial_aspect_ratio)}
 {
+  initializeStars(3000, 350.0f, 50.0f);
   initializeGeometry();
   initializeShaderPrograms();
   initializeSolarScenegraph();
@@ -69,29 +70,30 @@ void ApplicationSolar::update(GLFWwindow* window) {
   // update the rotations
   merc_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
   venu_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 10.0f));
-  eart_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 15.0f));
+  eart_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
   mars_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 20.0f));
   jupi_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 25.0f));
   satu_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 30.0f));
   uran_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 35.0f));
   nept_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 40.0f));
-  moon_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 20.0f));
+  moon_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 25.0f));
 
-  merc_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
-  venu_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
-  eart_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
-  mars_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
-  jupi_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
-  satu_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
-  uran_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
-  nept_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
-  moon_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
+  merc_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
+  venu_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
+  eart_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
+  mars_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
+  jupi_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
+  satu_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
+  uran_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
+  nept_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
+  moon_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
   // -----------------------------------------------------------------------------------------------------------------------------
 }
 
 void ApplicationSolar::render() const {
   // bind shader to upload uniforms
   glUseProgram(m_shaders.at("planet").handle);
+  uploadUniforms(m_shaders.at("planet"));
 
   // get all renderable nodes
   std::vector<GeometryNode*> geom_nodes = scenegraph.getGeomNodes();
@@ -112,31 +114,33 @@ void ApplicationSolar::render() const {
     // draw bound vertex array using bound shader
     glDrawElements(geom->getGeometry().draw_mode, geom->getGeometry().num_elements, model::INDEX.type, NULL);
   }
+
+  glUseProgram(m_shaders.at("stars").handle);
+  uploadUniforms(m_shaders.at("stars"));
+  glBindVertexArray(stars_object.vertex_AO);
+  glPointSize(2.0f);
+  glDrawArrays(stars_object.draw_mode, 0, stars_object.num_elements);
 }
 
-void ApplicationSolar::uploadView() {
-  // vertices are transformed in camera space, so camera transform must be inverted
-  // glm::fmat4 view_matrix = glm::inverse(m_view_transform);
-  // glm::lookAt() is used for the view viewmatrix, it's already in the correct form
-  glm::fmat4 view_matrix = m_view_transform;
+void ApplicationSolar::uploadView(shader_program const& prog) const {
   // upload matrix to gpu
-  glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ViewMatrix"),
-                     1, GL_FALSE, glm::value_ptr(view_matrix));
+  glUniformMatrix4fv(prog.u_locs.at("ViewMatrix"),
+                     1, GL_FALSE, glm::value_ptr(m_view_transform));
 }
 
-void ApplicationSolar::uploadProjection() {
+void ApplicationSolar::uploadProjection(shader_program const& prog) const {
   // upload matrix to gpu
-  glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ProjectionMatrix"),
+  glUniformMatrix4fv(prog.u_locs.at("ProjectionMatrix"),
                      1, GL_FALSE, glm::value_ptr(m_view_projection));
 }
 
 // update uniform locations
-void ApplicationSolar::uploadUniforms() { 
+void ApplicationSolar::uploadUniforms(shader_program const& prog) const { 
   // bind shader to which to upload unforms
-  glUseProgram(m_shaders.at("planet").handle);
+  glUseProgram(prog.handle);
   // upload uniform values to new locations
-  uploadView();
-  uploadProjection();
+  uploadView(prog);
+  uploadProjection(prog);
 }
 
 ///////////////////////////// intialisation functions /////////////////////////
@@ -150,6 +154,69 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet").u_locs["ModelMatrix"] = -1;
   m_shaders.at("planet").u_locs["ViewMatrix"] = -1;
   m_shaders.at("planet").u_locs["ProjectionMatrix"] = -1;
+
+  // star shader
+  m_shaders.emplace("stars", shader_program{{{GL_VERTEX_SHADER, m_resource_path + "shaders/vao.vert"},
+                                          {GL_FRAGMENT_SHADER,  m_resource_path + "shaders/vao.frag"}}});
+  m_shaders.at("stars").u_locs["ViewMatrix"] = -1;
+  m_shaders.at("stars").u_locs["ProjectionMatrix"] = -1;
+}
+
+// set up star positions and color
+void ApplicationSolar::initializeStars(int amount, float radius, float variance) {
+  // uniform distribution on a sphere: http://corysimon.github.io/articles/uniformdistn-on-sphere/
+  // set up random generation
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_real_distribution<float> randomfloat(0.0f, 1.0f);
+
+  // 6 floats per star (XYZ|RGB)
+  stars = std::vector<float>(amount*6);
+  for (int i = 0; i < amount; ++i) {
+    float theta = 2.0f * PI * randomfloat(mt);
+    float phi = acosf(1.0f - 2.0f * randomfloat(mt));
+    float var_radius = radius - variance * (1.0f - 2.0f * randomfloat(mt));
+    float x = sinf(phi) * sinf(theta) * var_radius;
+    float y = cosf(phi) * var_radius;
+    float z = sinf(phi) * cosf(theta) * var_radius;
+    float r = randomfloat(mt);
+    float g = randomfloat(mt);
+    float b = randomfloat(mt);
+    stars.at(i * 6) = x;
+    stars.at(i * 6 + 1) = y;
+    stars.at(i * 6 + 2) = z;
+    stars.at(i * 6 + 3) = r;
+    stars.at(i * 6 + 4) = g;
+    stars.at(i * 6 + 5) = b;
+  }
+
+  // generate vertex array object
+  glGenVertexArrays(1, &stars_object.vertex_AO);
+  // bind the array for attaching buffers
+  glBindVertexArray(stars_object.vertex_AO);
+
+  // generate generic buffer
+  glGenBuffers(1, &stars_object.vertex_BO);
+  // bind this as an vertex array buffer containing all attributes
+  glBindBuffer(GL_ARRAY_BUFFER, stars_object.vertex_BO);
+  // configure currently bound array buffer
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * amount * 6, stars.data(), GL_STATIC_DRAW);
+
+  // activate first attribute on gpu
+  glEnableVertexAttribArray(0);
+  // first attribute is 3 floats with no offset & stride
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);
+  // activate second attribute on gpu
+  glEnableVertexAttribArray(1);
+  // second attribute is 3 floats with 3 float offset & stride
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)(3*sizeof(float)));
+
+  glBindVertexArray(0);
+
+  // store type of primitive to draw
+  stars_object.draw_mode = GL_POINTS;
+  // transfer number of indices to model object 
+  stars_object.num_elements = GLsizei(amount);
 }
 
 // load models
@@ -327,7 +394,6 @@ void ApplicationSolar::processKeyInput(GLFWwindow* window) {
   
   // upload the updated view matrix
   m_view_transform = cam->getViewMatrix();
-  uploadView();
 }
 
 //handle delta mouse movement input
@@ -339,7 +405,6 @@ void ApplicationSolar::mouseCallback(double pos_x, double pos_y) {
 
   // upload the updated view matrix
   m_view_transform = cam->getViewMatrix();
-  uploadView();
 }
 
 //handle resizing
@@ -350,8 +415,6 @@ void ApplicationSolar::resizeCallback(unsigned width, unsigned height) {
   // use given utils to calculate the correct projection matrix
   cam->setProjectionMatrix(utils::calculate_projection_matrix(float(width) / float(height)));
   m_view_projection = cam->getProjectionMatrix();
-  // upload new projection matrix
-  uploadProjection();
 }
 
 
