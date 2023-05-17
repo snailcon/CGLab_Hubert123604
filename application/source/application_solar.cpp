@@ -115,11 +115,13 @@ void ApplicationSolar::render() const {
     glDrawElements(geom->getGeometry().draw_mode, geom->getGeometry().num_elements, model::INDEX.type, NULL);
   }
 
+  // render stars
+  // ---------------------------------------------------------------------
   glUseProgram(m_shaders.at("stars").handle);
   uploadUniforms(m_shaders.at("stars"));
   glBindVertexArray(stars_object.vertex_AO);
-  glPointSize(2.0f);
   glDrawArrays(stars_object.draw_mode, 0, stars_object.num_elements);
+  // ---------------------------------------------------------------------
 }
 
 void ApplicationSolar::uploadView(shader_program const& prog) const {
@@ -204,11 +206,11 @@ void ApplicationSolar::initializeStars(int amount, float radius, float variance)
 
   // activate first attribute on gpu
   glEnableVertexAttribArray(0);
-  // first attribute is 3 floats with no offset & stride
+  // first attribute (position)
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);
   // activate second attribute on gpu
   glEnableVertexAttribArray(1);
-  // second attribute is 3 floats with 3 float offset & stride
+  // second attribute (color)
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)(3*sizeof(float)));
 
   glBindVertexArray(0);
