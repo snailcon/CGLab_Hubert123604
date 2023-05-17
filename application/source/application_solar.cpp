@@ -88,15 +88,24 @@ void ApplicationSolar::update(GLFWwindow* window) {
   nept_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
   moon_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
   // -----------------------------------------------------------------------------------------------------------------------------
+
+  // update animation of the orbits (moon only)
+  orbit_model_mats.at(8) = glm::translate(orbit_model_mats.at(8), glm::vec3(-4.0f, 0.0f, 0.0f)); // undo translation to earth
+  orbit_model_mats.at(8) = glm::rotate(orbit_model_mats.at(8), glm::radians(-50.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // undo rotation to match moon orbit
+  orbit_model_mats.at(8) = glm::rotate(orbit_model_mats.at(8), glm::radians(deltaTime * 5.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+  orbit_model_mats.at(8) = glm::rotate(orbit_model_mats.at(8), glm::radians(50.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // redo rotation
+  orbit_model_mats.at(8) = glm::translate(orbit_model_mats.at(8), glm::vec3(4.0f, 0.0f, 0.0f)); // redo translation
 }
 
 void ApplicationSolar::render() const {
   // bind shader to upload uniforms
-  glUseProgram(m_shaders.at("planet").handle);
   uploadUniforms(m_shaders.at("planet"));
+  uploadUniforms(m_shaders.at("stars"));
+  uploadUniforms(m_shaders.at("orbit"));
 
   // get all renderable nodes
   std::vector<GeometryNode*> geom_nodes = scenegraph.getGeomNodes();
+  glUseProgram(m_shaders.at("planet").handle);
   for (GeometryNode* geom : geom_nodes) {
     glm::fmat4 model_matrix = geom->getWorldTransform(); // use their model matrices for rendering
     glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ModelMatrix"),
@@ -118,9 +127,19 @@ void ApplicationSolar::render() const {
   // render stars
   // ---------------------------------------------------------------------
   glUseProgram(m_shaders.at("stars").handle);
-  uploadUniforms(m_shaders.at("stars"));
   glBindVertexArray(stars_object.vertex_AO);
   glDrawArrays(stars_object.draw_mode, 0, stars_object.num_elements);
+  // ---------------------------------------------------------------------
+
+  // render orbits
+  // ---------------------------------------------------------------------
+  for (glm::mat4 model_matrix : orbit_model_mats) {
+    glUseProgram(m_shaders.at("orbit").handle);
+    glUniformMatrix4fv(m_shaders.at("orbit").u_locs.at("ModelMatrix"),
+                      1, GL_FALSE, glm::value_ptr(model_matrix));
+    glBindVertexArray(orbit_object.vertex_AO);
+    glDrawArrays(orbit_object.draw_mode, 0, orbit_object.num_elements);
+  }
   // ---------------------------------------------------------------------
 }
 
@@ -162,6 +181,13 @@ void ApplicationSolar::initializeShaderPrograms() {
                                           {GL_FRAGMENT_SHADER,  m_resource_path + "shaders/vao.frag"}}});
   m_shaders.at("stars").u_locs["ViewMatrix"] = -1;
   m_shaders.at("stars").u_locs["ProjectionMatrix"] = -1;
+
+  // star shader
+  m_shaders.emplace("orbit", shader_program{{{GL_VERTEX_SHADER, m_resource_path + "shaders/orbit.vert"},
+                                          {GL_FRAGMENT_SHADER,  m_resource_path + "shaders/vao.frag"}}});
+  m_shaders.at("orbit").u_locs["ModelMatrix"] = -1;
+  m_shaders.at("orbit").u_locs["ViewMatrix"] = -1;
+  m_shaders.at("orbit").u_locs["ProjectionMatrix"] = -1;
 }
 
 // set up star positions and color
@@ -173,7 +199,7 @@ void ApplicationSolar::initializeStars(int amount, float radius, float variance)
   std::uniform_real_distribution<float> randomfloat(0.0f, 1.0f);
 
   // 6 floats per star (XYZ|RGB)
-  stars = std::vector<float>(amount*6);
+  std::vector<float> stars = std::vector<float>(amount*6);
   for (int i = 0; i < amount; ++i) {
     float theta = 2.0f * PI * randomfloat(mt);
     float phi = acosf(1.0f - 2.0f * randomfloat(mt));
@@ -260,6 +286,43 @@ void ApplicationSolar::initializeGeometry() {
 }
 
 void ApplicationSolar::initializeSolarScenegraph() {
+
+  // prepare orbit object
+  // ------------------------------------------------------------------------------------------------------------------------------------
+  int orbit_resolution = 180;
+  std::vector<float> orbit = std::vector<float>(orbit_resolution * 3);
+
+  for (int i = 0; i < orbit_resolution; ++i) {
+    float arc = (i / (float)orbit_resolution) * 2.0f * PI;
+    orbit.at(i * 3) = sin(arc);
+    orbit.at(i * 3 + 1) = 0.0f;
+    orbit.at(i * 3 + 2) = cos(arc);
+  }
+
+  // generate vertex array object
+  glGenVertexArrays(1, &orbit_object.vertex_AO);
+  // bind the array for attaching buffers
+  glBindVertexArray(orbit_object.vertex_AO);
+
+  // generate generic buffer
+  glGenBuffers(1, &orbit_object.vertex_BO);
+  // bind this as an vertex array buffer containing all attributes
+  glBindBuffer(GL_ARRAY_BUFFER, orbit_object.vertex_BO);
+  // configure currently bound array buffer
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * orbit_resolution * 3, orbit.data(), GL_STATIC_DRAW);
+
+  // activate first attribute on gpu
+  glEnableVertexAttribArray(0);
+  // first attribute (position)
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+  glBindVertexArray(0);
+
+  // store type of primitive to draw
+  orbit_object.draw_mode = GL_LINE_LOOP;
+  // transfer number of indices to model object 
+  orbit_object.num_elements = GLsizei(orbit_resolution);
+  // ------------------------------------------------------------------------------------------------------------------------------------
 
   // set up all nodes for the scenegraph
   // ------------------------------------------------------------------------------------------------------------------------------------
@@ -360,6 +423,29 @@ void ApplicationSolar::initializeSolarScenegraph() {
   moon_hold->setTranslation(glm::vec3(4.0f, 0.0f, 0.0f));
   moon_geom->setTranslation(glm::vec3(1.0f, 0.0f, 0.0f));
   // ------------------------------------------------------------------------------------------------------------------------------------
+
+  // set up orbits
+  // ------------------------------------------------------------------------------------------------------------------------------------
+  orbit_model_mats = std::vector<glm::mat4>(9); // 8 planets + moon
+  orbit_model_mats.at(0) = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // merc
+  orbit_model_mats.at(1) = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(2.5f)), glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // venu
+  orbit_model_mats.at(2) = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(4.0f)), glm::radians(60.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // eart
+  orbit_model_mats.at(3) = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(6.0f)), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // mars
+  orbit_model_mats.at(4) = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(9.0f)), glm::radians(120.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // jupi
+  orbit_model_mats.at(5) = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(14.0f)), glm::radians(150.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // satu
+  orbit_model_mats.at(6) = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(30.0f)), glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // uran
+  orbit_model_mats.at(7) = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(50.0f)), glm::radians(210.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // nept
+
+  // moon
+  orbit_model_mats.at(8) =  glm::translate(
+                              glm::rotate(
+                                glm::rotate(
+                                  glm::scale(glm::mat4(1.0f), glm::vec3(1.0f)), 
+                                glm::radians(60.0f), glm::vec3(1.0f, 0.0f, 0.0f)), 
+                              glm::radians(50.0f), glm::vec3(1.0f, 0.0f, 0.0f)),
+                            glm::vec3(4.0f, 0.0f, 0.0f)); 
+  // ------------------------------------------------------------------------------------------------------------------------------------
+
 
   // set the root
   scenegraph.setRoot(root);

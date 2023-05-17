@@ -47,9 +47,12 @@ class ApplicationSolar : public Application {
   // cpu representation of model
   model_object planet_object;
   
-  // stars container
-  std::vector<float> stars;
+  // stars model holder
   model_object stars_object;
+
+  // orbit model holder
+  std::vector<glm::mat4> orbit_model_mats;
+  model_object orbit_object;
 
   // camera transform matrix
   glm::fmat4 m_view_transform;
