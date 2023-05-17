@@ -65,6 +65,8 @@ class ApplicationSolar : public Application {
   float deltaTime = 0.0f;
   // required for deltaTime
   float lastFrame = 0.0f;
+
+  bool draw_orbits = true;
 };
 
 #endif

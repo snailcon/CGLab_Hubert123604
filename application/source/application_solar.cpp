@@ -133,12 +133,14 @@ void ApplicationSolar::render() const {
 
   // render orbits
   // ---------------------------------------------------------------------
-  for (glm::mat4 model_matrix : orbit_model_mats) {
-    glUseProgram(m_shaders.at("orbit").handle);
-    glUniformMatrix4fv(m_shaders.at("orbit").u_locs.at("ModelMatrix"),
-                      1, GL_FALSE, glm::value_ptr(model_matrix));
-    glBindVertexArray(orbit_object.vertex_AO);
-    glDrawArrays(orbit_object.draw_mode, 0, orbit_object.num_elements);
+  if (draw_orbits) {
+    for (glm::mat4 model_matrix : orbit_model_mats) {
+      glUseProgram(m_shaders.at("orbit").handle);
+      glUniformMatrix4fv(m_shaders.at("orbit").u_locs.at("ModelMatrix"),
+                        1, GL_FALSE, glm::value_ptr(model_matrix));
+      glBindVertexArray(orbit_object.vertex_AO);
+      glDrawArrays(orbit_object.draw_mode, 0, orbit_object.num_elements);
+    }
   }
   // ---------------------------------------------------------------------
 }
@@ -294,9 +296,9 @@ void ApplicationSolar::initializeSolarScenegraph() {
 
   for (int i = 0; i < orbit_resolution; ++i) {
     float arc = (i / (float)orbit_resolution) * 2.0f * PI;
-    orbit.at(i * 3) = sin(arc);
+    orbit.at(i * 3) = sinf(arc);
     orbit.at(i * 3 + 1) = 0.0f;
-    orbit.at(i * 3 + 2) = cos(arc);
+    orbit.at(i * 3 + 2) = cosf(arc);
   }
 
   // generate vertex array object
@@ -457,8 +459,9 @@ void ApplicationSolar::initializeSolarScenegraph() {
 ///////////////////////////// callback functions for window events ////////////
 // handle key input
 void ApplicationSolar::keyCallback(int key, int action, int mods) {
-  // using this to keep track of keystates is probably better than hijacking the window and using glfwGetKey
-  // but the other solution was easier
+  if (key == GLFW_KEY_O  && (action == GLFW_PRESS)) {
+    draw_orbits = !draw_orbits;
+  }
 }
 
 // handle per frame key input
