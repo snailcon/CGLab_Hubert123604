@@ -134,11 +134,11 @@ void ApplicationSolar::render() const {
   // render orbits
   // ---------------------------------------------------------------------
   if (draw_orbits) {
+    glUseProgram(m_shaders.at("orbit").handle);
+    glBindVertexArray(orbit_object.vertex_AO);
     for (glm::mat4 model_matrix : orbit_model_mats) {
-      glUseProgram(m_shaders.at("orbit").handle);
       glUniformMatrix4fv(m_shaders.at("orbit").u_locs.at("ModelMatrix"),
                         1, GL_FALSE, glm::value_ptr(model_matrix));
-      glBindVertexArray(orbit_object.vertex_AO);
       glDrawArrays(orbit_object.draw_mode, 0, orbit_object.num_elements);
     }
   }
