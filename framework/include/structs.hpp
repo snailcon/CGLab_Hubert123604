@@ -14,6 +14,8 @@ struct model_object {
   GLuint vertex_BO = 0;
   // index buffer object
   GLuint element_BO = 0;
+  // has index element buffer
+  bool is_indexed = false;
   // primitive type to draw
   GLenum draw_mode = GL_NONE;
   // indices number, if EBO exists
