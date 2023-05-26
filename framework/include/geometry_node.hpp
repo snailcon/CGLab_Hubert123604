@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <memory>
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -13,7 +14,7 @@
 // GeometryNode hold the gpu representation of a model
 class GeometryNode : public Node {
 public:
-    GeometryNode(std::string const& name, model_object const& geometry);
+    GeometryNode(std::string const& name, model_object const& geometry, shader_program* shader);
 
     model_object getGeometry() const;
     void setGeometry(model_object const& geometry);

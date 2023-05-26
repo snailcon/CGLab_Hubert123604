@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <random>
+#include <memory>
 
 #include "application.hpp"
 #include "model.hpp"

@@ -1,6 +1,9 @@
 #include "geometry_node.hpp"
 
-GeometryNode::GeometryNode(std::string const& name, model_object const& geometry) : Node(name), model_(geometry){
+#include "utils.hpp"
+
+GeometryNode::GeometryNode(std::string const& name, model_object const& geometry, shader_program* shader) 
+    : Node(name), model_(geometry), shader_(shader){
 
 }
 
@@ -17,7 +20,7 @@ void GeometryNode::setShader(shader_program* shader) {
 }
 
 void GeometryNode::setUniformMat4(std::string const& name, glm::mat4 const& mat) {
-    uniforms_.at(name) = mat;
+    uniforms_[name] = mat;
 }
 
 void GeometryNode::uploadUniforms() const {
@@ -30,6 +33,7 @@ void GeometryNode::uploadUniforms() const {
 }
 
 void GeometryNode::render() const {
+    glUseProgram(shader_->handle);
     glBindVertexArray(model_.vertex_AO);
     if (model_.is_indexed) {
         glDrawElements(model_.draw_mode, model_.num_elements, model::INDEX.type, NULL);

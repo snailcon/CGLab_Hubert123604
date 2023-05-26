@@ -28,6 +28,7 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
   initializeStars(3000, 350.0f, 50.0f);
   initializeGeometry();
   initializeShaderPrograms();
+  reloadShaders(false);
   initializeSolarScenegraph();
 }
 
@@ -105,23 +106,15 @@ void ApplicationSolar::render() const {
 
   // get all renderable nodes
   std::vector<GeometryNode*> geom_nodes = scenegraph.getGeomNodes();
-  glUseProgram(m_shaders.at("planet").handle);
   for (GeometryNode* geom : geom_nodes) {
-    glm::fmat4 model_matrix = geom->getWorldTransform(); // use their model matrices for rendering
-    glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ModelMatrix"),
-                      1, GL_FALSE, glm::value_ptr(model_matrix));
-
     // extra matrix for normal transformation to keep them orthogonal to surface
-    glm::fmat4 normal_matrix = glm::inverseTranspose(m_view_transform * model_matrix);
-    glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("NormalMatrix"),
-                      1, GL_FALSE, glm::value_ptr(normal_matrix));
+    glm::fmat4 normal_matrix = glm::inverseTranspose(m_view_transform * geom->getWorldTransform());
+    geom->setUniformMat4("ModelMatrix", geom->getWorldTransform());
+    geom->setUniformMat4("NormalMatrix", normal_matrix);
 
-    // the gpu representation is saved in the node, so it can be used here
-    // bind the VAO to draw
-    glBindVertexArray(geom->getGeometry().vertex_AO);
+    geom->uploadUniforms();
 
-    // draw bound vertex array using bound shader
-    glDrawElements(geom->getGeometry().draw_mode, geom->getGeometry().num_elements, model::INDEX.type, NULL);
+    geom->render();
   }
 
   // render stars
@@ -285,6 +278,7 @@ void ApplicationSolar::initializeGeometry() {
   planet_object.draw_mode = GL_TRIANGLES;
   // transfer number of indices to model object 
   planet_object.num_elements = GLsizei(planet_model.indices.size());
+  planet_object.is_indexed = true;
 }
 
 void ApplicationSolar::initializeSolarScenegraph() {
@@ -332,7 +326,7 @@ void ApplicationSolar::initializeSolarScenegraph() {
   std::shared_ptr<CameraNode> camera = std::make_shared<CameraNode>("Camera", utils::calculate_projection_matrix(initial_aspect_ratio));
 
   std::shared_ptr<Node> sun_hold = std::make_shared<Node>("sun. hold");
-  std::shared_ptr<GeometryNode> sun_geom = std::make_shared<GeometryNode>("sun. geom", planet_object);
+  std::shared_ptr<GeometryNode> sun_geom = std::make_shared<GeometryNode>("sun. geom", planet_object, &(m_shaders.at("planet")));
 
   std::shared_ptr<Node> merc_hold = std::make_shared<Node>("merc. hold");
   std::shared_ptr<Node> venu_hold = std::make_shared<Node>("venu. hold");
@@ -344,17 +338,17 @@ void ApplicationSolar::initializeSolarScenegraph() {
   std::shared_ptr<Node> nept_hold = std::make_shared<Node>("nept. hold");
 
   // hijack the planet_object to use as the model for every geometry node
-  std::shared_ptr<GeometryNode> merc_geom = std::make_shared<GeometryNode>("merc. geom", planet_object);
-  std::shared_ptr<GeometryNode> venu_geom = std::make_shared<GeometryNode>("venu. geom", planet_object);
-  std::shared_ptr<GeometryNode> eart_geom = std::make_shared<GeometryNode>("eart. geom", planet_object);
-  std::shared_ptr<GeometryNode> mars_geom = std::make_shared<GeometryNode>("mars. geom", planet_object);
-  std::shared_ptr<GeometryNode> jupi_geom = std::make_shared<GeometryNode>("jupi. geom", planet_object);
-  std::shared_ptr<GeometryNode> satu_geom = std::make_shared<GeometryNode>("satu. geom", planet_object);
-  std::shared_ptr<GeometryNode> uran_geom = std::make_shared<GeometryNode>("uran. geom", planet_object);
-  std::shared_ptr<GeometryNode> nept_geom = std::make_shared<GeometryNode>("nept. geom", planet_object);
+  std::shared_ptr<GeometryNode> merc_geom = std::make_shared<GeometryNode>("merc. geom", planet_object, &(m_shaders.at("planet")));
+  std::shared_ptr<GeometryNode> venu_geom = std::make_shared<GeometryNode>("venu. geom", planet_object, &(m_shaders.at("planet")));
+  std::shared_ptr<GeometryNode> eart_geom = std::make_shared<GeometryNode>("eart. geom", planet_object, &(m_shaders.at("planet")));
+  std::shared_ptr<GeometryNode> mars_geom = std::make_shared<GeometryNode>("mars. geom", planet_object, &(m_shaders.at("planet")));
+  std::shared_ptr<GeometryNode> jupi_geom = std::make_shared<GeometryNode>("jupi. geom", planet_object, &(m_shaders.at("planet")));
+  std::shared_ptr<GeometryNode> satu_geom = std::make_shared<GeometryNode>("satu. geom", planet_object, &(m_shaders.at("planet")));
+  std::shared_ptr<GeometryNode> uran_geom = std::make_shared<GeometryNode>("uran. geom", planet_object, &(m_shaders.at("planet")));
+  std::shared_ptr<GeometryNode> nept_geom = std::make_shared<GeometryNode>("nept. geom", planet_object, &(m_shaders.at("planet")));
 
   std::shared_ptr<Node> moon_hold = std::make_shared<Node>("moon. hold");
-  std::shared_ptr<GeometryNode> moon_geom = std::make_shared<GeometryNode>("moon. geom", planet_object);
+  std::shared_ptr<GeometryNode> moon_geom = std::make_shared<GeometryNode>("moon. geom", planet_object, &(m_shaders.at("planet")));
 
   // ------------------------------------------------------------------------------------------------------------------------------------
 
