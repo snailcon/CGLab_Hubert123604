@@ -21,7 +21,16 @@ void GeometryNode::setShader(shader_program* shader) {
 
 void GeometryNode::setUniformMat4(std::string const& name, glm::mat4 const& mat) {
     if (shader_->u_locs.count(name) == 1) {
-        uniforms_[name] = mat;
+        uniforms_[name] = std::make_pair(UNIFORM_TYPE::MAT4, std::make_shared<glm::mat4>(glm::mat4(mat)));
+    } else {
+        // debug output :/
+        // std::cout<<"ShaderProgram at handle "<<shader_->handle<<" does not have a Uniform named: "<<name<<std::endl;
+    }
+}
+
+void GeometryNode::setUniformVec3(std::string const& name, glm::vec3 const& vec) {
+    if (shader_->u_locs.count(name) == 1) {
+        uniforms_[name] = std::make_pair(UNIFORM_TYPE::VEC3, std::make_shared<glm::vec3>(glm::vec3(vec)));
     } else {
         // debug output :/
         // std::cout<<"ShaderProgram at handle "<<shader_->handle<<" does not have a Uniform named: "<<name<<std::endl;
@@ -32,8 +41,14 @@ void GeometryNode::uploadUniforms() const {
     glUseProgram(shader_->handle);
 
     for (auto const& uniform : uniforms_) {
-        glUniformMatrix4fv(shader_->u_locs.at(uniform.first),
-                           1, GL_FALSE, glm::value_ptr(uniform.second));
+        switch(uniform.second.first) {
+            case UNIFORM_TYPE::MAT4: 
+                glUniformMatrix4fv(shader_->u_locs.at(uniform.first), 1, GL_FALSE, (GLfloat*)(uniform.second.second).get());
+                break;
+            case UNIFORM_TYPE::VEC3: 
+                glUniform3fv(shader_->u_locs.at(uniform.first), 1, (GLfloat*)(uniform.second.second).get());
+                break;
+        }
     }
 }
 

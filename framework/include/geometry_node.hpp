@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <utility>
 #include <memory>
 
 #include <glm/gtc/type_ptr.hpp>
@@ -10,6 +11,8 @@
 #include "model.hpp"
 #include "node.hpp"
 #include "structs.hpp"
+
+enum UNIFORM_TYPE {MAT4, VEC3};
 
 // GeometryNode hold the gpu representation of a model
 class GeometryNode : public Node {
@@ -21,6 +24,7 @@ public:
 
     void setShader(shader_program* shader);
     void setUniformMat4(std::string const& name, glm::mat4 const& mat);
+    void setUniformVec3(std::string const& name, glm::vec3 const& vec);
     void uploadUniforms() const;
 
     void render() const;
@@ -29,7 +33,7 @@ public:
 private:
     model_object model_;
     shader_program* shader_;
-    std::map<std::string, glm::mat4> uniforms_;
+    std::map<std::string, std::pair<UNIFORM_TYPE, std::shared_ptr<void>>> uniforms_;
 };
 
 #endif

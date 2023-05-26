@@ -143,6 +143,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet").u_locs["ModelMatrix"] = -1;
   m_shaders.at("planet").u_locs["ViewMatrix"] = -1;
   m_shaders.at("planet").u_locs["ProjectionMatrix"] = -1;
+  m_shaders.at("planet").u_locs["color"] = -1;
 
   // star shader
   m_shaders.emplace("stars", shader_program{{{GL_VERTEX_SHADER, m_resource_path + "shaders/vao.vert"},
@@ -430,6 +431,19 @@ void ApplicationSolar::initializeSolarScenegraph() {
   moon_orbi->setScale(glm::vec3(1.0f));
   // ------------------------------------------------------------------------------------------------------------------------------------
 
+  // setup colors
+  // -------------------------------------------------
+  sun_geom->setUniformVec3("color", glm::vec3(1.0f, 1.0f, 0.0f));
+  merc_geom->setUniformVec3("color", glm::vec3(0.7f, 0.8f, 0.0f));
+  venu_geom->setUniformVec3("color", glm::vec3(0.9f, 0.6f, 0.0f));
+  eart_geom->setUniformVec3("color", glm::vec3(0.2f, 0.4f, 1.0f));
+  mars_geom->setUniformVec3("color", glm::vec3(1.0f, 0.3f, 0.0f));
+  jupi_geom->setUniformVec3("color", glm::vec3(0.5f, 0.4f, 0.0f));
+  satu_geom->setUniformVec3("color", glm::vec3(0.7f, 0.5f, 0.0f));
+  uran_geom->setUniformVec3("color", glm::vec3(0.0f, 0.3f, 0.6f));
+  nept_geom->setUniformVec3("color", glm::vec3(0.0f, 0.1f, 1.0f));
+  moon_geom->setUniformVec3("color", glm::vec3(0.8f, 0.8f, 0.8f));
+  // -------------------------------------------------
 
   // set the root
   scenegraph.setRoot(root);
