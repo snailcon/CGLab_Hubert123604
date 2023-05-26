@@ -300,6 +300,7 @@ void ApplicationSolar::initializeSolarScenegraph() {
 
   std::shared_ptr<Node> sun_hold = std::make_shared<Node>("sun. hold");
   std::shared_ptr<GeometryNode> sun_geom = std::make_shared<GeometryNode>("sun. geom", planet_object, &(m_shaders.at("planet")));
+  std::shared_ptr<PointlightNode> sun_light = std::make_shared<PointlightNode>("sun. ligth", glm::vec3(1.0f), 1.0f);
 
   std::shared_ptr<Node> merc_hold = std::make_shared<Node>("merc. hold");
   std::shared_ptr<Node> venu_hold = std::make_shared<Node>("venu. hold");
@@ -350,6 +351,7 @@ void ApplicationSolar::initializeSolarScenegraph() {
   root->addChild(uran_hold);
   root->addChild(nept_hold);
   sun_hold->addChild(sun_geom);
+  sun_hold->addChild(sun_light);
   merc_hold->addChild(merc_orbi);
   venu_hold->addChild(venu_orbi);
   eart_hold->addChild(eart_orbi);

@@ -8,6 +8,7 @@
 
 #include "node.hpp"
 #include "geometry_node.hpp"
+#include "pointlight_node.hpp"
 #include "camera_node.hpp"
 
 class SceneGraph {
@@ -25,6 +26,8 @@ public:
 
     // helper-method to only get nodes with geometry for rendering
     std::vector<GeometryNode*> getGeomNodes() const;
+    // helper-method to only get pointlight nodes
+    std::vector<PointlightNode*> getPointlightNodes() const;
 
     void printGraph();
 private:

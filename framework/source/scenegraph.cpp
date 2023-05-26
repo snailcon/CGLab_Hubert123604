@@ -40,6 +40,25 @@ std::vector<GeometryNode*> SceneGraph::getGeomNodes() const{
     return geom_nodes;
 }
 
+std::vector<PointlightNode*> SceneGraph::getPointlightNodes() const{
+    std::vector<Node*> all_nodes;
+    
+    // recursive function to get all nodes
+    root_->getChildren(all_nodes);
+
+    std::vector<PointlightNode*> pl_nodes;
+
+    // filter out non-GeometryNodes with dynamic typing
+    for (auto& child : all_nodes) {
+        PointlightNode* pl_node = dynamic_cast<PointlightNode*>(child);
+        if (pl_node != nullptr) {
+            pl_nodes.push_back(pl_node);
+        }
+    }
+
+    return pl_nodes;
+}
+
 void SceneGraph::printGraph() {
     root_->printSubGraph(std::cout);
 }
