@@ -89,13 +89,6 @@ void ApplicationSolar::update(GLFWwindow* window) {
   nept_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
   moon_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
   // -----------------------------------------------------------------------------------------------------------------------------
-
-  // update animation of the orbits (moon only)
-  orbit_model_mats.at(8) = glm::translate(orbit_model_mats.at(8), glm::vec3(-4.0f, 0.0f, 0.0f)); // undo translation to earth
-  orbit_model_mats.at(8) = glm::rotate(orbit_model_mats.at(8), glm::radians(-50.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // undo rotation to match moon orbit
-  orbit_model_mats.at(8) = glm::rotate(orbit_model_mats.at(8), glm::radians(deltaTime * 5.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-  orbit_model_mats.at(8) = glm::rotate(orbit_model_mats.at(8), glm::radians(50.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // redo rotation
-  orbit_model_mats.at(8) = glm::translate(orbit_model_mats.at(8), glm::vec3(4.0f, 0.0f, 0.0f)); // redo translation
 }
 
 void ApplicationSolar::render() const {
@@ -116,26 +109,6 @@ void ApplicationSolar::render() const {
 
     geom->render();
   }
-
-  // render stars
-  // ---------------------------------------------------------------------
-  glUseProgram(m_shaders.at("stars").handle);
-  glBindVertexArray(stars_object.vertex_AO);
-  glDrawArrays(stars_object.draw_mode, 0, stars_object.num_elements);
-  // ---------------------------------------------------------------------
-
-  // render orbits
-  // ---------------------------------------------------------------------
-  if (draw_orbits) {
-    glUseProgram(m_shaders.at("orbit").handle);
-    glBindVertexArray(orbit_object.vertex_AO);
-    for (glm::mat4 model_matrix : orbit_model_mats) {
-      glUniformMatrix4fv(m_shaders.at("orbit").u_locs.at("ModelMatrix"),
-                        1, GL_FALSE, glm::value_ptr(model_matrix));
-      glDrawArrays(orbit_object.draw_mode, 0, orbit_object.num_elements);
-    }
-  }
-  // ---------------------------------------------------------------------
 }
 
 void ApplicationSolar::uploadView(shader_program const& prog) const {
@@ -337,6 +310,15 @@ void ApplicationSolar::initializeSolarScenegraph() {
   std::shared_ptr<Node> uran_hold = std::make_shared<Node>("uran. hold");
   std::shared_ptr<Node> nept_hold = std::make_shared<Node>("nept. hold");
 
+  std::shared_ptr<GeometryNode> merc_orbi = std::make_shared<GeometryNode>("merc. orbi", orbit_object, &(m_shaders.at("orbit")));
+  std::shared_ptr<GeometryNode> venu_orbi = std::make_shared<GeometryNode>("venu. orbi", orbit_object, &(m_shaders.at("orbit")));
+  std::shared_ptr<GeometryNode> eart_orbi = std::make_shared<GeometryNode>("eart. orbi", orbit_object, &(m_shaders.at("orbit")));
+  std::shared_ptr<GeometryNode> mars_orbi = std::make_shared<GeometryNode>("mars. orbi", orbit_object, &(m_shaders.at("orbit")));
+  std::shared_ptr<GeometryNode> jupi_orbi = std::make_shared<GeometryNode>("jupi. orbi", orbit_object, &(m_shaders.at("orbit")));
+  std::shared_ptr<GeometryNode> satu_orbi = std::make_shared<GeometryNode>("satu. orbi", orbit_object, &(m_shaders.at("orbit")));
+  std::shared_ptr<GeometryNode> uran_orbi = std::make_shared<GeometryNode>("uran. orbi", orbit_object, &(m_shaders.at("orbit")));
+  std::shared_ptr<GeometryNode> nept_orbi = std::make_shared<GeometryNode>("nept. orbi", orbit_object, &(m_shaders.at("orbit")));
+
   // hijack the planet_object to use as the model for every geometry node
   std::shared_ptr<GeometryNode> merc_geom = std::make_shared<GeometryNode>("merc. geom", planet_object, &(m_shaders.at("planet")));
   std::shared_ptr<GeometryNode> venu_geom = std::make_shared<GeometryNode>("venu. geom", planet_object, &(m_shaders.at("planet")));
@@ -348,13 +330,16 @@ void ApplicationSolar::initializeSolarScenegraph() {
   std::shared_ptr<GeometryNode> nept_geom = std::make_shared<GeometryNode>("nept. geom", planet_object, &(m_shaders.at("planet")));
 
   std::shared_ptr<Node> moon_hold = std::make_shared<Node>("moon. hold");
+  std::shared_ptr<GeometryNode> moon_orbi = std::make_shared<GeometryNode>("moon. orbi", orbit_object, &(m_shaders.at("orbit")));
   std::shared_ptr<GeometryNode> moon_geom = std::make_shared<GeometryNode>("moon. geom", planet_object, &(m_shaders.at("planet")));
 
+  std::shared_ptr<GeometryNode> star_geom = std::make_shared<GeometryNode>("star. geom", stars_object, &(m_shaders.at("stars")));
   // ------------------------------------------------------------------------------------------------------------------------------------
 
   // set up the hierachy
   // ------------------------------------------------------------------------------------------------------------------------------------
   root->addChild(camera);
+  root->addChild(star_geom);
   root->addChild(sun_hold);
   root->addChild(merc_hold);
   root->addChild(venu_hold);
@@ -365,6 +350,14 @@ void ApplicationSolar::initializeSolarScenegraph() {
   root->addChild(uran_hold);
   root->addChild(nept_hold);
   sun_hold->addChild(sun_geom);
+  merc_hold->addChild(merc_orbi);
+  venu_hold->addChild(venu_orbi);
+  eart_hold->addChild(eart_orbi);
+  mars_hold->addChild(mars_orbi);
+  jupi_hold->addChild(jupi_orbi);
+  satu_hold->addChild(satu_orbi);
+  uran_hold->addChild(uran_orbi);
+  nept_hold->addChild(nept_orbi);
   merc_hold->addChild(merc_geom);
   venu_hold->addChild(venu_geom);
   eart_hold->addChild(eart_geom);
@@ -375,6 +368,7 @@ void ApplicationSolar::initializeSolarScenegraph() {
   nept_hold->addChild(nept_geom);
 
   eart_hold->addChild(moon_hold);
+  moon_hold->addChild(moon_orbi);
   moon_hold->addChild(moon_geom);
   // ------------------------------------------------------------------------------------------------------------------------------------
 
@@ -422,24 +416,16 @@ void ApplicationSolar::initializeSolarScenegraph() {
 
   // set up orbits
   // ------------------------------------------------------------------------------------------------------------------------------------
-  orbit_model_mats = std::vector<glm::mat4>(9); // 8 planets + moon
-  orbit_model_mats.at(0) = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // merc
-  orbit_model_mats.at(1) = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(2.5f)), glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // venu
-  orbit_model_mats.at(2) = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(4.0f)), glm::radians(60.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // eart
-  orbit_model_mats.at(3) = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(6.0f)), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // mars
-  orbit_model_mats.at(4) = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(9.0f)), glm::radians(120.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // jupi
-  orbit_model_mats.at(5) = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(14.0f)), glm::radians(150.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // satu
-  orbit_model_mats.at(6) = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(30.0f)), glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // uran
-  orbit_model_mats.at(7) = glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(50.0f)), glm::radians(210.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // nept
+  merc_orbi->setScale(glm::vec3(1.5f));
+  venu_orbi->setScale(glm::vec3(2.5f));
+  eart_orbi->setScale(glm::vec3(4.0f));
+  mars_orbi->setScale(glm::vec3(6.0f));
+  jupi_orbi->setScale(glm::vec3(9.0f));
+  satu_orbi->setScale(glm::vec3(14.0f));
+  uran_orbi->setScale(glm::vec3(30.0f));
+  nept_orbi->setScale(glm::vec3(50.0f));
 
-  // moon
-  orbit_model_mats.at(8) =  glm::translate(
-                              glm::rotate(
-                                glm::rotate(
-                                  glm::scale(glm::mat4(1.0f), glm::vec3(1.0f)), 
-                                glm::radians(60.0f), glm::vec3(1.0f, 0.0f, 0.0f)), 
-                              glm::radians(50.0f), glm::vec3(1.0f, 0.0f, 0.0f)),
-                            glm::vec3(4.0f, 0.0f, 0.0f)); 
+  moon_orbi->setScale(glm::vec3(1.0f));
   // ------------------------------------------------------------------------------------------------------------------------------------
 
 

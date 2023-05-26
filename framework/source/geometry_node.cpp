@@ -20,7 +20,12 @@ void GeometryNode::setShader(shader_program* shader) {
 }
 
 void GeometryNode::setUniformMat4(std::string const& name, glm::mat4 const& mat) {
-    uniforms_[name] = mat;
+    if (shader_->u_locs.count(name) == 1) {
+        uniforms_[name] = mat;
+    } else {
+        // debug output :/
+        // std::cout<<"ShaderProgram at handle "<<shader_->handle<<" does not have a Uniform named: "<<name<<std::endl;
+    }
 }
 
 void GeometryNode::uploadUniforms() const {

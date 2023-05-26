@@ -52,7 +52,6 @@ class ApplicationSolar : public Application {
   model_object stars_object;
 
   // orbit model holder
-  std::vector<glm::mat4> orbit_model_mats;
   model_object orbit_object;
 
   // camera transform matrix
