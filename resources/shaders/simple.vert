@@ -9,14 +9,16 @@ uniform mat4 ModelMatrix;
 uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
 uniform mat4 NormalMatrix;
-uniform vec3 color;
 
 out vec3 pass_Normal;
-out vec3 pass_Color;
+// pass the world pos
+out vec3 world_pos;
+out vec3 camera_pos;
 
 void main(void)
 {
 	gl_Position = (ProjectionMatrix  * ViewMatrix * ModelMatrix) * vec4(in_Position, 1.0);
+	world_pos = (ModelMatrix * vec4(in_Position, 1.0)).xyz;
+	camera_pos = (inverse(ViewMatrix) * vec4(0.0f, 0.0f, 0.0f, 1.0f)).xyz;
 	pass_Normal = (NormalMatrix * vec4(in_Normal, 0.0)).xyz;
-	pass_Color = color;
 }

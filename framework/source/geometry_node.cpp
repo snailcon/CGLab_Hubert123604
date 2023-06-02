@@ -37,6 +37,15 @@ void GeometryNode::setUniformVec3(std::string const& name, glm::vec3 const& vec)
     }
 }
 
+void GeometryNode::setUniformFloat(std::string const& name, float val) {
+    if (shader_->u_locs.count(name) == 1) {
+        uniforms_[name] = std::make_pair(UNIFORM_TYPE::FLOAT, std::make_shared<float>(val));
+    } else {
+        // debug output :/
+        // std::cout<<"ShaderProgram at handle "<<shader_->handle<<" does not have a Uniform named: "<<name<<std::endl;
+    }
+}
+
 void GeometryNode::uploadUniforms() const {
     glUseProgram(shader_->handle);
 
@@ -47,6 +56,9 @@ void GeometryNode::uploadUniforms() const {
                 break;
             case UNIFORM_TYPE::VEC3: 
                 glUniform3fv(shader_->u_locs.at(uniform.first), 1, (GLfloat*)(uniform.second.second).get());
+                break;
+            case UNIFORM_TYPE::FLOAT:
+                glUniform1fv(shader_->u_locs.at(uniform.first), 1, (GLfloat*)(uniform.second.second).get());
                 break;
         }
     }

@@ -97,13 +97,21 @@ void ApplicationSolar::render() const {
   uploadUniforms(m_shaders.at("stars"));
   uploadUniforms(m_shaders.at("orbit"));
 
+  // get all light nodes
+  std::vector<PointlightNode*> light_nodes = scenegraph.getPointlightNodes();
+  glm::mat4 l_trans = light_nodes.at(0)->getWorldTransform();
+  glm::vec3 light_pos = glm::vec3(l_trans[3][0], l_trans[3][1], l_trans[3][2]);
+
   // get all renderable nodes
   std::vector<GeometryNode*> geom_nodes = scenegraph.getGeomNodes();
   for (GeometryNode* geom : geom_nodes) {
     // extra matrix for normal transformation to keep them orthogonal to surface
-    glm::fmat4 normal_matrix = glm::inverseTranspose(m_view_transform * geom->getWorldTransform());
+    glm::fmat4 normal_matrix = glm::inverseTranspose(geom->getWorldTransform());
     geom->setUniformMat4("ModelMatrix", geom->getWorldTransform());
     geom->setUniformMat4("NormalMatrix", normal_matrix);
+    geom->setUniformVec3("light_pos", light_pos);
+    geom->setUniformVec3("light_col", light_nodes.at(0)->getColor());
+    geom->setUniformFloat("light_intensity", light_nodes.at(0)->getIntensity());
 
     geom->uploadUniforms();
 
@@ -144,6 +152,9 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet").u_locs["ViewMatrix"] = -1;
   m_shaders.at("planet").u_locs["ProjectionMatrix"] = -1;
   m_shaders.at("planet").u_locs["color"] = -1;
+  m_shaders.at("planet").u_locs["light_pos"] = -1;
+  m_shaders.at("planet").u_locs["light_col"] = -1;
+  m_shaders.at("planet").u_locs["light_intensity"] = -1;
 
   // star shader
   m_shaders.emplace("stars", shader_program{{{GL_VERTEX_SHADER, m_resource_path + "shaders/vao.vert"},
