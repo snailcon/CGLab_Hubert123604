@@ -67,6 +67,7 @@ class ApplicationSolar : public Application {
   float lastFrame = 0.0f;
 
   bool draw_orbits = true;
+  bool is_toon = false;
 };
 
 #endif

@@ -5,7 +5,7 @@ uniform vec3 light_pos;
 uniform vec3 light_col;
 uniform float light_intensity;
 
-uniform bool toon = false;
+uniform bool is_toon = false;
 uniform float toon_steps = 5.0f;
 
 uniform float ambient_strength = 0.2f;
@@ -33,7 +33,7 @@ void main() {
   //float specular_val = pow(clamp(dot(half_way, normal_dir), 0.0f, 1.0f), specular_const * 4);
 
 
-  if (toon) {
+  if (is_toon) {
     specular_val = step(0.5f, specular_val);
     diffuse = floor(diffuse * toon_steps)/toon_steps;
   }
@@ -45,8 +45,8 @@ void main() {
   vec3 final_color = ambient_color + (diffuse_color + specular) * light_intensity;
 
   float val = 1.0f;
-  if (toon) {
-    round(dot(normal_dir, -view_dir) * 0.95f);
+  if (is_toon) {
+    val = round(dot(normal_dir, -view_dir) * 0.95f);
   }
   vec3 colorGammaCorrected = pow(final_color, vec3(1.0 / screenGamma));
   out_Color = vec4(colorGammaCorrected * val, 1.0);

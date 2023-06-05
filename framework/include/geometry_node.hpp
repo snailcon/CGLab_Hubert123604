@@ -12,7 +12,7 @@
 #include "node.hpp"
 #include "structs.hpp"
 
-enum UNIFORM_TYPE {MAT4, VEC3, FLOAT};
+enum UNIFORM_TYPE {MAT4, VEC3, FLOAT, BOOL};
 
 // GeometryNode hold the gpu representation of a model
 class GeometryNode : public Node {
@@ -26,6 +26,7 @@ public:
     void setUniformMat4(std::string const& name, glm::mat4 const& mat);
     void setUniformVec3(std::string const& name, glm::vec3 const& vec);
     void setUniformFloat(std::string const& name, float val);
+    void setUniformBool(std::string const& name, bool val);
     void uploadUniforms() const;
 
     void render() const;

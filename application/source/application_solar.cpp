@@ -113,6 +113,8 @@ void ApplicationSolar::render() const {
     geom->setUniformVec3("light_col", light_nodes.at(0)->getColor());
     geom->setUniformFloat("light_intensity", light_nodes.at(0)->getIntensity());
 
+    geom->setUniformBool("is_toon", is_toon);
+
     geom->uploadUniforms();
 
     geom->render();
@@ -155,6 +157,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet").u_locs["light_pos"] = -1;
   m_shaders.at("planet").u_locs["light_col"] = -1;
   m_shaders.at("planet").u_locs["light_intensity"] = -1;
+  m_shaders.at("planet").u_locs["is_toon"] = -1;
 
   // star shader
   m_shaders.emplace("stars", shader_program{{{GL_VERTEX_SHADER, m_resource_path + "shaders/vao.vert"},
@@ -468,6 +471,9 @@ void ApplicationSolar::initializeSolarScenegraph() {
 void ApplicationSolar::keyCallback(int key, int action, int mods) {
   if (key == GLFW_KEY_O  && (action == GLFW_PRESS)) {
     draw_orbits = !draw_orbits;
+  }
+  if (key == GLFW_KEY_T  && (action == GLFW_PRESS)) {
+    is_toon = !is_toon;
   }
 }
 
