@@ -44,10 +44,14 @@ void main() {
 
   vec3 final_color = ambient_color + (diffuse_color + specular) * light_intensity;
 
-  float val = 1.0f;
+  float outline_val = 1.0f;
   if (is_toon) {
-    val = round(dot(normal_dir, -view_dir) * 0.95f);
+    outline_val = round(dot(normal_dir, -view_dir) * 1.5f);
   }
   vec3 colorGammaCorrected = pow(final_color, vec3(1.0 / screenGamma));
-  out_Color = vec4(colorGammaCorrected * val, 1.0);
+  if (outline_val > 0.5f) {
+    out_Color = vec4(colorGammaCorrected, 1.0);
+  } else {
+    out_Color = vec4(1.0f);
+  }
 }
