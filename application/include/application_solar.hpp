@@ -8,6 +8,7 @@
 #include "application.hpp"
 #include "model.hpp"
 #include "structs.hpp"
+#include "texture_loader.hpp"
 #include "scenegraph.hpp"
 
 // gpu representation of model
@@ -44,6 +45,8 @@ class ApplicationSolar : public Application {
   void uploadView(shader_program const& prog) const;
 
   void initializeSolarScenegraph();
+
+  void loadTexture(unsigned int texture, std::string path);
 
   // cpu representation of model
   model_object planet_object;

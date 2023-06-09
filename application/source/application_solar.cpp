@@ -38,6 +38,20 @@ ApplicationSolar::~ApplicationSolar() {
   glDeleteVertexArrays(1, &planet_object.vertex_AO);
 }
 
+void ApplicationSolar::loadTexture(unsigned int texture, std::string path) {
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  pixel_data tex = texture_loader::file(m_resource_path + "textures/" + path);
+  if (tex.channels == GL_RED) {
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_RED);
+  }
+  glTexImage2D(GL_TEXTURE_2D, 0, tex.channels, tex.width, tex.height, 0, tex.channels, tex.channel_type, tex.pixels.data());
+  glGenerateMipmap(GL_TEXTURE_2D);
+}
+
 void ApplicationSolar::update(GLFWwindow* window) {
   // update the deltaTime for the current frame
   float currentFrame = glfwGetTime();
@@ -118,6 +132,8 @@ void ApplicationSolar::render() const {
 
     geom->uploadUniforms();
 
+    geom->bindTextures();
+
     geom->render();
   }
 }
@@ -160,6 +176,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet").u_locs["light_intensity"] = -1;
   m_shaders.at("planet").u_locs["is_toon"] = -1;
   m_shaders.at("planet").u_locs["toon_steps"] = -1;
+  m_shaders.at("planet").u_locs["diffuse_texture"] = -1;
 
   // star shader
   m_shaders.emplace("stars", shader_program{{{GL_VERTEX_SHADER, m_resource_path + "shaders/vao.vert"},
@@ -234,7 +251,7 @@ void ApplicationSolar::initializeStars(int amount, float radius, float variance)
 
 // load models
 void ApplicationSolar::initializeGeometry() {
-  model planet_model = model_loader::obj(m_resource_path + "models/sphere.obj", model::NORMAL);
+  model planet_model = model_loader::obj(m_resource_path + "models/sphere.obj", model::NORMAL | model::TEXCOORD);
 
   // generate vertex array object
   glGenVertexArrays(1, &planet_object.vertex_AO);
@@ -256,6 +273,10 @@ void ApplicationSolar::initializeGeometry() {
   glEnableVertexAttribArray(1);
   // second attribute is 3 floats with no offset & stride
   glVertexAttribPointer(1, model::NORMAL.components, model::NORMAL.type, GL_FALSE, planet_model.vertex_bytes, planet_model.offsets[model::NORMAL]);
+    // activate second attribute on gpu
+  glEnableVertexAttribArray(2);
+  // second attribute is 3 floats with no offset & stride
+  glVertexAttribPointer(2, model::TEXCOORD.components, model::TEXCOORD.type, GL_FALSE, planet_model.vertex_bytes, planet_model.offsets[model::TEXCOORD]);
 
    // generate generic buffer
   glGenBuffers(1, &planet_object.element_BO);
@@ -459,6 +480,60 @@ void ApplicationSolar::initializeSolarScenegraph() {
   uran_geom->setUniformVec3("color", glm::vec3(0.0f, 0.3f, 0.6f));
   nept_geom->setUniformVec3("color", glm::vec3(0.0f, 0.1f, 1.0f));
   moon_geom->setUniformVec3("color", glm::vec3(0.8f, 0.8f, 0.8f));
+  // -------------------------------------------------
+
+  // load and set textures
+  // -------------------------------------------------
+  unsigned int sun_texture;
+  unsigned int merc_texture;
+  unsigned int venu_texture;
+  unsigned int eart_texture;
+  unsigned int mars_texture;
+  unsigned int jupi_texture;
+  unsigned int satu_texture;
+  unsigned int uran_texture;
+  unsigned int nept_texture;
+  unsigned int moon_texture;
+  glGenTextures(1, &sun_texture);  
+  glGenTextures(1, &merc_texture);  
+  glGenTextures(1, &venu_texture);  
+  glGenTextures(1, &eart_texture);  
+  glGenTextures(1, &mars_texture);  
+  glGenTextures(1, &jupi_texture);  
+  glGenTextures(1, &satu_texture);  
+  glGenTextures(1, &uran_texture);  
+  glGenTextures(1, &nept_texture);  
+  glGenTextures(1, &moon_texture);  
+  loadTexture(sun_texture, "sunmap.jpg");
+  loadTexture(merc_texture, "mercurymap.jpg");
+  loadTexture(venu_texture, "venusmap.jpg");
+  loadTexture(eart_texture, "earthmap1k.jpg");
+  loadTexture(mars_texture, "mars_1k_color.jpg");
+  loadTexture(jupi_texture, "jupitermap.jpg");
+  loadTexture(satu_texture, "saturnmap.jpg");
+  loadTexture(uran_texture, "uranusmap.jpg");
+  loadTexture(nept_texture, "neptunemap.jpg");
+  loadTexture(moon_texture, "moonmap1k.jpg");
+  sun_geom->setTexture("diffuse_texture", sun_texture);
+  merc_geom->setTexture("diffuse_texture", merc_texture);
+  venu_geom->setTexture("diffuse_texture", venu_texture);
+  eart_geom->setTexture("diffuse_texture", eart_texture);
+  mars_geom->setTexture("diffuse_texture", mars_texture);
+  jupi_geom->setTexture("diffuse_texture", jupi_texture);
+  satu_geom->setTexture("diffuse_texture", satu_texture);
+  uran_geom->setTexture("diffuse_texture", uran_texture);
+  nept_geom->setTexture("diffuse_texture", nept_texture);
+  moon_geom->setTexture("diffuse_texture", moon_texture);
+  sun_geom->setTextureUniforms();
+  merc_geom->setTextureUniforms();
+  venu_geom->setTextureUniforms();
+  eart_geom->setTextureUniforms();
+  mars_geom->setTextureUniforms();
+  jupi_geom->setTextureUniforms();
+  satu_geom->setTextureUniforms();
+  uran_geom->setTextureUniforms();
+  nept_geom->setTextureUniforms();
+  moon_geom->setTextureUniforms();
   // -------------------------------------------------
 
   // set the root

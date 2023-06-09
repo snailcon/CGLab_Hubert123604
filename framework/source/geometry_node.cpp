@@ -46,9 +46,19 @@ void GeometryNode::setUniformFloat(std::string const& name, float val) {
     }
 }
 
+void GeometryNode::setUniformInt(std::string const& name, int val) {
+    if (shader_->u_locs.count(name) == 1) {
+        uniforms_[name] = std::make_pair(UNIFORM_TYPE::INT, std::make_shared<int>(val));
+    } else {
+        // debug output :/
+        // std::cout<<"ShaderProgram at handle "<<shader_->handle<<" does not have a Uniform named: "<<name<<std::endl;
+    }
+}
+
 void GeometryNode::setUniformBool(std::string const& name, bool val) {
     if (shader_->u_locs.count(name) == 1) {
-        uniforms_[name] = std::make_pair(UNIFORM_TYPE::BOOL, std::make_shared<int>(val));
+        // just use Type Int as expected by GPU
+        uniforms_[name] = std::make_pair(UNIFORM_TYPE::INT, std::make_shared<int>(val));
     } else {
         // debug output :/
         // std::cout<<"ShaderProgram at handle "<<shader_->handle<<" does not have a Uniform named: "<<name<<std::endl;
@@ -69,7 +79,7 @@ void GeometryNode::uploadUniforms() const {
             case UNIFORM_TYPE::FLOAT:
                 glUniform1fv(shader_->u_locs.at(uniform.first), 1, (GLfloat*)(uniform.second.second).get());
                 break;
-            case UNIFORM_TYPE::BOOL:
+            case UNIFORM_TYPE::INT:
                 glUniform1iv(shader_->u_locs.at(uniform.first), 1, (GLint*)(uniform.second.second).get());
                 break;
         }
@@ -83,6 +93,28 @@ void GeometryNode::render() const {
         glDrawElements(model_.draw_mode, model_.num_elements, model::INDEX.type, NULL);
     } else {
         glDrawArrays(model_.draw_mode, 0, model_.num_elements);
+    }
+}
+
+void GeometryNode::setTexture(std::string const& name, unsigned int texture) {
+    textures_[name] = texture;
+}
+
+void GeometryNode::setTextureUniforms() {
+    int i = 0;
+    for (auto & texture : textures_) {
+        setUniformInt(texture.first, i);
+        i++;
+    }
+}
+
+void GeometryNode::bindTextures() {
+    glUseProgram(shader_->handle);
+    int i = 0;
+    for (auto & texture : textures_) {
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(GL_TEXTURE_2D, texture.second);
+        ++i;
     }
 }
 

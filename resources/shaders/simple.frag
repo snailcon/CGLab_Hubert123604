@@ -13,7 +13,10 @@ uniform int specular_const = 24;
 
 uniform float screenGamma = 2.2f;
 
+uniform sampler2D diffuse_texture;
+
 in vec3 pass_Normal;
+in vec2 pass_UV;
 in vec3 world_pos;
 in vec3 camera_pos;
 out vec4 out_Color;
@@ -38,11 +41,13 @@ void main() {
     diffuse = floor(diffuse * toon_steps)/toon_steps;
   }
 
-  vec3 ambient_color = color * ambient_strength;
-  vec3 diffuse_color = color * diffuse;
+  vec3 flat_diffuse = texture(diffuse_texture, pass_UV).xyz;
+
+  vec3 ambient_color = flat_diffuse * ambient_strength;
+  vec3 diffuse_color = flat_diffuse * diffuse;
   vec3 specular = vec3(1.0f) * specular_val;
 
-  vec3 final_color = ambient_color + (diffuse_color + specular) * light_intensity;
+  vec3 final_color = ambient_color + (diffuse_color + specular) * light_intensity * light_col;
 
   float outline_val = 1.0f;
   if (is_toon) {
