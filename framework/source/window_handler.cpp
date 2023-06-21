@@ -183,7 +183,7 @@ static void APIENTRY openglCallbackFunction(
 ){
   (void)source; (void)type; (void)id; 
   (void)severity; (void)length; (void)userParam;
-  if (severity == GL_DEBUG_SEVERITY_NOTIFICATION || type == GL_DEBUG_TYPE_PERFORMANCE) {
+  if (severity == GL_DEBUG_SEVERITY_NOTIFICATION || type == GL_DEBUG_TYPE_PERFORMANCE || severity == GL_DEBUG_SEVERITY_LOW) {
     return;
   }
   std::cerr << glbinding::Meta::getString(severity) << " - " << glbinding::Meta::getString(type) << ": ";
