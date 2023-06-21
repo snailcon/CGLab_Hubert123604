@@ -28,6 +28,7 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
   initializeStars(3000, 350.0f, 50.0f);
   initializeGeometry();
   initializeShaderPrograms();
+  initializeSkyboxObject();
   reloadShaders(false);
   initializeSolarScenegraph();
 }
@@ -50,6 +51,22 @@ void ApplicationSolar::loadTexture(unsigned int texture, std::string path) {
   }
   glTexImage2D(GL_TEXTURE_2D, 0, tex.channels, tex.width, tex.height, 0, tex.channels, tex.channel_type, tex.pixels.data());
   glGenerateMipmap(GL_TEXTURE_2D);
+}
+
+void ApplicationSolar::loadCubemap(unsigned int cubemap, std::string path) {
+  glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
+  int i = 0;
+  std::vector<std::string> sides = {"right.png", "left.png", "bottom.png", "top.png", "front.png", "back.png"};
+  for (std::string side : sides) {
+    pixel_data tex = texture_loader::file(m_resource_path + "textures/" + path + "/" + side);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, tex.channels, tex.width, tex.height, 0, tex.channels, tex.channel_type, tex.pixels.data());
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    ++i;
+  }
 }
 
 void ApplicationSolar::update(GLFWwindow* window) {
@@ -108,8 +125,9 @@ void ApplicationSolar::update(GLFWwindow* window) {
 void ApplicationSolar::render() const {
   // bind shader to upload uniforms
   uploadUniforms(m_shaders.at("planet"));
-  uploadUniforms(m_shaders.at("stars"));
+  uploadUniforms(m_shaders.at("stars"), false);
   uploadUniforms(m_shaders.at("orbit"));
+  uploadUniforms(m_shaders.at("skybox"), false);
 
   // get all light nodes
   std::vector<PointlightNode*> light_nodes = scenegraph.getPointlightNodes();
@@ -140,10 +158,12 @@ void ApplicationSolar::render() const {
   }
 }
 
-void ApplicationSolar::uploadView(shader_program const& prog) const {
+void ApplicationSolar::uploadView(shader_program const& prog, bool do_translate) const {
   // upload matrix to gpu
-  glUniformMatrix4fv(prog.u_locs.at("ViewMatrix"),
-                     1, GL_FALSE, glm::value_ptr(m_view_transform));
+  if (do_translate)
+    glUniformMatrix4fv(prog.u_locs.at("ViewMatrix"), 1, GL_FALSE, glm::value_ptr(m_view_transform));
+  else
+    glUniformMatrix4fv(prog.u_locs.at("ViewMatrix"), 1, GL_FALSE, glm::value_ptr(glm::mat4(glm::mat3(m_view_transform))));
 }
 
 void ApplicationSolar::uploadProjection(shader_program const& prog) const {
@@ -153,11 +173,11 @@ void ApplicationSolar::uploadProjection(shader_program const& prog) const {
 }
 
 // update uniform locations
-void ApplicationSolar::uploadUniforms(shader_program const& prog) const { 
+void ApplicationSolar::uploadUniforms(shader_program const& prog, bool do_translate) const { 
   // bind shader to which to upload unforms
   glUseProgram(prog.handle);
   // upload uniform values to new locations
-  uploadView(prog);
+  uploadView(prog, do_translate);
   uploadProjection(prog);
 }
 
@@ -194,6 +214,12 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("orbit").u_locs["ModelMatrix"] = -1;
   m_shaders.at("orbit").u_locs["ViewMatrix"] = -1;
   m_shaders.at("orbit").u_locs["ProjectionMatrix"] = -1;
+
+  // skybox shader
+  m_shaders.emplace("skybox", shader_program{{{GL_VERTEX_SHADER, m_resource_path + "shaders/skybox.vert"},
+                                          {GL_FRAGMENT_SHADER,  m_resource_path + "shaders/skybox.frag"}}});
+  m_shaders.at("skybox").u_locs["ViewMatrix"] = -1;
+  m_shaders.at("skybox").u_locs["ProjectionMatrix"] = -1;
 }
 
 // set up star positions and color
@@ -296,6 +322,77 @@ void ApplicationSolar::initializeGeometry() {
   planet_object.is_indexed = true;
 }
 
+void ApplicationSolar::initializeSkyboxObject() {
+  float skyboxVertices[] = {
+    // positions          
+    -1.0f,  1.0f, -1.0f,
+    -1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+
+    -1.0f, -1.0f,  1.0f,
+    -1.0f, -1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,
+
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+
+    -1.0f, -1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f, -1.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,
+
+    -1.0f,  1.0f, -1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f, -1.0f,
+
+    -1.0f, -1.0f, -1.0f,
+    -1.0f, -1.0f,  1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+    -1.0f, -1.0f,  1.0f,
+     1.0f, -1.0f,  1.0f
+  };
+
+  // generate vertex array object
+  glGenVertexArrays(1, &skybox_object.vertex_AO);
+  // bind the array for attaching buffers
+  glBindVertexArray(skybox_object.vertex_AO);
+
+  // generate generic buffer
+  glGenBuffers(1, &skybox_object.vertex_BO);
+  // bind this as an vertex array buffer containing all attributes
+  glBindBuffer(GL_ARRAY_BUFFER, skybox_object.vertex_BO);
+  // configure currently bound array buffer
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 6 * 3, skyboxVertices, GL_STATIC_DRAW);
+
+  // activate first attribute on gpu
+  glEnableVertexAttribArray(0);
+  // first attribute (position)
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+  glBindVertexArray(0);
+
+  // store type of primitive to draw
+  skybox_object.draw_mode = GL_TRIANGLES;
+  // transfer number of indices to model object 
+  skybox_object.num_elements = GLsizei(6 * 6);
+}
+
 void ApplicationSolar::initializeSolarScenegraph() {
 
   // prepare orbit object
@@ -362,7 +459,7 @@ void ApplicationSolar::initializeSolarScenegraph() {
   std::shared_ptr<GeometryNode> uran_orbi = std::make_shared<GeometryNode>("uran. orbi", orbit_object, &(m_shaders.at("orbit")));
   std::shared_ptr<GeometryNode> nept_orbi = std::make_shared<GeometryNode>("nept. orbi", orbit_object, &(m_shaders.at("orbit")));
 
-  // hijack the planet_object to use as the model for every geometry node
+  // use the planet_object to use as the model for every geometry node
   std::shared_ptr<GeometryNode> merc_geom = std::make_shared<GeometryNode>("merc. geom", planet_object, &(m_shaders.at("planet")));
   std::shared_ptr<GeometryNode> venu_geom = std::make_shared<GeometryNode>("venu. geom", planet_object, &(m_shaders.at("planet")));
   std::shared_ptr<GeometryNode> eart_geom = std::make_shared<GeometryNode>("eart. geom", planet_object, &(m_shaders.at("planet")));
@@ -377,12 +474,15 @@ void ApplicationSolar::initializeSolarScenegraph() {
   std::shared_ptr<GeometryNode> moon_geom = std::make_shared<GeometryNode>("moon. geom", planet_object, &(m_shaders.at("planet")));
 
   std::shared_ptr<GeometryNode> star_geom = std::make_shared<GeometryNode>("star. geom", stars_object, &(m_shaders.at("stars")));
+
+  std::shared_ptr<GeometryNode> skybox = std::make_shared<GeometryNode>("skyb. geom", skybox_object, &(m_shaders.at("skybox")));
   // ------------------------------------------------------------------------------------------------------------------------------------
 
   // set up the hierachy
   // ------------------------------------------------------------------------------------------------------------------------------------
   root->addChild(camera);
   root->addChild(star_geom);
+  root->addChild(skybox);
   root->addChild(sun_hold);
   root->addChild(merc_hold);
   root->addChild(venu_hold);
@@ -528,15 +628,10 @@ void ApplicationSolar::initializeSolarScenegraph() {
   uran_geom->setTexture("diffuse_texture", uran_texture);
   nept_geom->setTexture("diffuse_texture", nept_texture);
   moon_geom->setTexture("diffuse_texture", moon_texture);
-  unsigned int sun_norm_texture;
   unsigned int merc_norm_texture;
   unsigned int venu_norm_texture;
   unsigned int eart_norm_texture;
   unsigned int mars_norm_texture;
-  unsigned int jupi_norm_texture;
-  unsigned int satu_norm_texture;
-  unsigned int uran_norm_texture;
-  unsigned int nept_norm_texture;
   unsigned int moon_norm_texture;
   glGenTextures(1, &merc_norm_texture);
   glGenTextures(1, &venu_norm_texture);
@@ -563,6 +658,15 @@ void ApplicationSolar::initializeSolarScenegraph() {
   uran_geom->setTextureUniforms();
   nept_geom->setTextureUniforms();
   moon_geom->setTextureUniforms();
+  // -------------------------------------------------
+
+  // load skybox
+  // -------------------------------------------------
+  unsigned int skybox_tex;
+  glGenTextures(1, &skybox_tex);
+  loadCubemap(skybox_tex, "skybox_galaxy");
+  skybox->setTexture("cubemap", skybox_tex, true);
+  skybox->setTextureUniforms();
   // -------------------------------------------------
 
   // set the root

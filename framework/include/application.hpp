@@ -72,7 +72,7 @@ void Application::run(int argc, char* argv[], unsigned ver_major, unsigned ver_m
 
     // enable depth testing
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
+    glDepthFunc(GL_LEQUAL);
     
     // rendering loop
     while (!glfwWindowShouldClose(window)) {

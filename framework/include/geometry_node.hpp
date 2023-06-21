@@ -30,7 +30,7 @@ public:
     void setUniformBool(std::string const& name, bool val);
     void uploadUniforms() const;
 
-    void setTexture(std::string const& name, unsigned int texture);
+    void setTexture(std::string const& name, unsigned int texture, bool is_cubemap = false);
     void setTextureUniforms();
     void bindTextures();
 
@@ -40,7 +40,7 @@ public:
 private:
     model_object model_;
     shader_program* shader_;
-    std::map<std::string, unsigned int> textures_;
+    std::map<std::string, std::pair<unsigned int, bool>> textures_;
     std::map<std::string, std::pair<UNIFORM_TYPE, std::shared_ptr<void>>> uniforms_;
 };
 

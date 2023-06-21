@@ -96,8 +96,8 @@ void GeometryNode::render() const {
     }
 }
 
-void GeometryNode::setTexture(std::string const& name, unsigned int texture) {
-    textures_[name] = texture;
+void GeometryNode::setTexture(std::string const& name, unsigned int texture, bool is_cubemap) {
+    textures_[name] = std::make_pair(texture, is_cubemap);
 }
 
 void GeometryNode::setTextureUniforms() {
@@ -113,7 +113,8 @@ void GeometryNode::bindTextures() {
     int i = 0;
     for (auto & texture : textures_) {
         glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture(GL_TEXTURE_2D, texture.second);
+        if (!texture.second.second) glBindTexture(GL_TEXTURE_2D, texture.second.first);
+        else glBindTexture(GL_TEXTURE_CUBE_MAP, texture.second.first);
         ++i;
     }
     for (; i < 16; ++i) {

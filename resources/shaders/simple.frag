@@ -1,7 +1,5 @@
 #version 150
 
-#extension GL_OES_standard_derivatives : enable
-
 uniform vec3 color;
 uniform vec3 light_pos;
 uniform vec3 light_col;

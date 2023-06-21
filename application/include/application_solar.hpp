@@ -37,16 +37,18 @@ class ApplicationSolar : public Application {
   void initializeShaderPrograms();
   void initializeStars(int amount, float radius, float variance);
   void initializeGeometry();
+  void initializeSkyboxObject();
   // update uniform values
-  void uploadUniforms(shader_program const& prog) const;
+  void uploadUniforms(shader_program const& prog, bool do_translate = true) const;
   // upload projection matrix
   void uploadProjection(shader_program const& prog) const;
   // upload view matrix
-  void uploadView(shader_program const& prog) const;
+  void uploadView(shader_program const& prog, bool do_translate) const;
 
   void initializeSolarScenegraph();
 
   void loadTexture(unsigned int texture, std::string path);
+  void loadCubemap(unsigned int cubemap, std::string path);
 
   // cpu representation of model
   model_object planet_object;
@@ -56,6 +58,9 @@ class ApplicationSolar : public Application {
 
   // orbit model holder
   model_object orbit_object;
+
+  // skybox model holder
+  model_object skybox_object;
 
   // camera transform matrix
   glm::fmat4 m_view_transform;
