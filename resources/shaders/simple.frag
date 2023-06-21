@@ -1,5 +1,7 @@
 #version 150
 
+#extension GL_OES_standard_derivatives : enable
+
 uniform vec3 color;
 uniform vec3 light_pos;
 uniform vec3 light_col;
@@ -14,6 +16,9 @@ uniform int specular_const = 24;
 uniform float screenGamma = 2.2f;
 
 uniform sampler2D diffuse_texture;
+uniform sampler2D normal_texture;
+
+uniform float normal_strength;
 
 in vec3 pass_Normal;
 in vec2 pass_UV;
@@ -21,8 +26,24 @@ in vec3 world_pos;
 in vec3 camera_pos;
 out vec4 out_Color;
 
+vec3 perturbNormal( vec3 vertex_pos, vec3 surf_norm ) {
+  vec3 q0 = dFdx( vertex_pos.xyz );
+  vec3 q1 = dFdy( vertex_pos.xyz );
+  vec2 st0 = dFdx( pass_UV );
+  vec2 st1 = dFdy( pass_UV );
+  vec3 S = normalize( q0 * st1.t - q1 * st0.t );
+  vec3 T = normalize( -q0 * st1.s + q1 * st0.s );
+  vec3 N = normalize( surf_norm );
+  vec3 mapN = texture2D( normal_texture, pass_UV ).xyz * 2.0 - 1.0;
+  if (length(mapN+1.0) < 0.001f) return surf_norm;
+  mapN.xy = mapN.xy * normal_strength;
+  mat3 tsn = mat3( S, T, N );
+  return normalize( tsn * mapN );
+}
+
 void main() {
   vec3 normal_dir = normalize(pass_Normal);
+  normal_dir = perturbNormal(world_pos, normal_dir);
   vec3 view_dir = normalize(world_pos - camera_pos);
   vec3 light_dir = normalize(light_pos - world_pos);
   float diffuse = clamp((dot(normal_dir, light_dir)), 0.0f, 1.0f);

@@ -72,6 +72,8 @@ class ApplicationSolar : public Application {
   bool draw_orbits = true;
   bool is_toon = false;
   float toon_steps = 5.0f;
+  float normal_strength = 1.0f;
+  float timescale = 1.0f;
 };
 
 #endif

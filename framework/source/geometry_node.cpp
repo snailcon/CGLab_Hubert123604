@@ -116,6 +116,10 @@ void GeometryNode::bindTextures() {
         glBindTexture(GL_TEXTURE_2D, texture.second);
         ++i;
     }
+    for (; i < 16; ++i) {
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 }
 
 void GeometryNode::printSubGraph(std::ostream& out) const {

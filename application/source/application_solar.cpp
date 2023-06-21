@@ -83,25 +83,25 @@ void ApplicationSolar::update(GLFWwindow* window) {
   Node* moon_geom = moon_hold->getChild("moon. geom");
 
   // update the rotations
-  merc_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
-  venu_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 10.0f));
-  eart_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 5.0f));
-  mars_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 20.0f));
-  jupi_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 25.0f));
-  satu_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 30.0f));
-  uran_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 35.0f));
-  nept_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 40.0f));
-  moon_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 25.0f));
+  merc_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 5.0f));
+  venu_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 10.0f));
+  eart_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 5.0f));
+  mars_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 20.0f));
+  jupi_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 25.0f));
+  satu_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 30.0f));
+  uran_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 35.0f));
+  nept_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 40.0f));
+  moon_hold->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 25.0f));
 
-  merc_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
-  venu_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
-  eart_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
-  mars_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
-  jupi_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
-  satu_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
-  uran_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
-  nept_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
-  moon_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(deltaTime * 50.0f));
+  merc_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 50.0f));
+  venu_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 50.0f));
+  eart_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 50.0f));
+  mars_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 50.0f));
+  jupi_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 50.0f));
+  satu_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 50.0f));
+  uran_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 50.0f));
+  nept_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 50.0f));
+  moon_geom->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(timescale * deltaTime * 50.0f));
   // -----------------------------------------------------------------------------------------------------------------------------
 }
 
@@ -129,6 +129,8 @@ void ApplicationSolar::render() const {
 
     geom->setUniformBool("is_toon", is_toon);
     geom->setUniformFloat("toon_steps", toon_steps);
+
+    geom->setUniformFloat("normal_strength", normal_strength); 
 
     geom->uploadUniforms();
 
@@ -177,6 +179,8 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet").u_locs["is_toon"] = -1;
   m_shaders.at("planet").u_locs["toon_steps"] = -1;
   m_shaders.at("planet").u_locs["diffuse_texture"] = -1;
+  m_shaders.at("planet").u_locs["normal_texture"] = -1;
+  m_shaders.at("planet").u_locs["normal_strength"] = -1;
 
   // star shader
   m_shaders.emplace("stars", shader_program{{{GL_VERTEX_SHADER, m_resource_path + "shaders/vao.vert"},
@@ -524,6 +528,31 @@ void ApplicationSolar::initializeSolarScenegraph() {
   uran_geom->setTexture("diffuse_texture", uran_texture);
   nept_geom->setTexture("diffuse_texture", nept_texture);
   moon_geom->setTexture("diffuse_texture", moon_texture);
+  unsigned int sun_norm_texture;
+  unsigned int merc_norm_texture;
+  unsigned int venu_norm_texture;
+  unsigned int eart_norm_texture;
+  unsigned int mars_norm_texture;
+  unsigned int jupi_norm_texture;
+  unsigned int satu_norm_texture;
+  unsigned int uran_norm_texture;
+  unsigned int nept_norm_texture;
+  unsigned int moon_norm_texture;
+  glGenTextures(1, &merc_norm_texture);
+  glGenTextures(1, &venu_norm_texture);
+  glGenTextures(1, &eart_norm_texture);
+  glGenTextures(1, &mars_norm_texture);
+  glGenTextures(1, &moon_norm_texture);
+  loadTexture(merc_norm_texture, "mercurynormal.jpg");
+  loadTexture(venu_norm_texture, "venusnormal.jpg");
+  loadTexture(eart_norm_texture, "earthnormal.jpg");
+  loadTexture(mars_norm_texture, "mars_1k_normal.jpg");
+  loadTexture(moon_norm_texture, "moonnormal.jpg");
+  merc_geom->setTexture("normal_texture", merc_norm_texture);
+  venu_geom->setTexture("normal_texture", venu_norm_texture);
+  eart_geom->setTexture("normal_texture", eart_norm_texture);
+  mars_geom->setTexture("normal_texture", mars_norm_texture);
+  moon_geom->setTexture("normal_texture", moon_norm_texture);
   sun_geom->setTextureUniforms();
   merc_geom->setTextureUniforms();
   venu_geom->setTextureUniforms();
@@ -558,6 +587,18 @@ void ApplicationSolar::keyCallback(int key, int action, int mods) {
   }
   if (key == GLFW_KEY_KP_SUBTRACT  && (action == GLFW_PRESS) && is_toon && toon_steps > 1.1f) {
     toon_steps -= 1.0f;
+  }
+  if (key == GLFW_KEY_KP_6  && (action == GLFW_PRESS)) {
+    normal_strength += 0.5f;
+  }
+  if (key == GLFW_KEY_KP_5  && (action == GLFW_PRESS)) {
+    normal_strength -= 0.5f;
+  }
+  if (key == GLFW_KEY_KP_3  && (action == GLFW_PRESS)) {
+    timescale += 0.2f;
+  }
+  if (key == GLFW_KEY_KP_2  && (action == GLFW_PRESS)) {
+    timescale -= 0.2f;
   }
 }
 
