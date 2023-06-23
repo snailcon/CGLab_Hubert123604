@@ -29,6 +29,7 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
   initializeGeometry();
   initializeShaderPrograms();
   initializeSkyboxObject();
+  initializeFramebuffer();
   reloadShaders(false);
   initializeSolarScenegraph();
 }
@@ -134,6 +135,11 @@ void ApplicationSolar::render() const {
   glm::mat4 l_trans = light_nodes.at(0)->getWorldTransform();
   glm::vec3 light_pos = glm::vec3(l_trans[3][0], l_trans[3][1], l_trans[3][2]);
 
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo_handle);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glEnable(GL_DEPTH_TEST);
+
   // get all renderable nodes
   std::vector<GeometryNode*> geom_nodes = scenegraph.getGeomNodes();
   for (GeometryNode* geom : geom_nodes) {
@@ -156,6 +162,19 @@ void ApplicationSolar::render() const {
 
     geom->render();
   }
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glDisable(GL_DEPTH_TEST);
+
+  glUseProgram(m_shaders.at("screen").handle);
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, tex_handle);
+
+  glBindVertexArray(screen_object.vertex_AO);
+  glDrawArrays(screen_object.draw_mode, 0, screen_object.num_elements);
 }
 
 void ApplicationSolar::uploadView(shader_program const& prog, bool do_translate) const {
@@ -182,6 +201,70 @@ void ApplicationSolar::uploadUniforms(shader_program const& prog, bool do_transl
 }
 
 ///////////////////////////// intialisation functions /////////////////////////
+
+void ApplicationSolar::initializeFramebuffer() {
+  glGenRenderbuffers(1, &rb_handle);
+  glBindRenderbuffer(GL_RENDERBUFFER, rb_handle);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH32F_STENCIL8, initial_resolution.x, initial_resolution.y);
+
+  glGenTextures(1, &tex_handle);
+  glBindTexture(GL_TEXTURE_2D, tex_handle);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, initial_resolution.x, initial_resolution.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  glGenFramebuffers(1, &fbo_handle);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo_handle);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tex_handle, 0);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rb_handle);
+
+  // glDrawBuffer(GL_COLOR_ATTACHMENT0);
+  // glDrawBuffer(GL_DEPTH_ATTACHMENT);
+
+  glBindRenderbuffer(GL_RENDERBUFFER, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  float points[] = {
+    -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+     1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+
+     1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+     1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+    -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+  };
+
+  // generate vertex array object
+  glGenVertexArrays(1, &screen_object.vertex_AO);
+  // bind the array for attaching buffers
+  glBindVertexArray(screen_object.vertex_AO);
+
+  // generate generic buffer
+  glGenBuffers(1, &screen_object.vertex_BO);
+  // bind this as an vertex array buffer containing all attributes
+  glBindBuffer(GL_ARRAY_BUFFER, screen_object.vertex_BO);
+  // configure currently bound array buffer
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 5 * 6, points, GL_STATIC_DRAW);
+
+  // activate first attribute on gpu
+  glEnableVertexAttribArray(0);
+  // first attribute (position)
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
+  // activate second attribute on gpu
+  glEnableVertexAttribArray(1);
+  // second attribute (color)
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*)(3*sizeof(float)));
+
+  glBindVertexArray(0);
+
+  // store type of primitive to draw
+  screen_object.draw_mode = GL_TRIANGLES;
+  // transfer number of indices to model object 
+  screen_object.num_elements = GLsizei(6);
+}
+
 // load shader sources
 void ApplicationSolar::initializeShaderPrograms() {
   // store shader program objects in container
@@ -220,6 +303,12 @@ void ApplicationSolar::initializeShaderPrograms() {
                                           {GL_FRAGMENT_SHADER,  m_resource_path + "shaders/skybox.frag"}}});
   m_shaders.at("skybox").u_locs["ViewMatrix"] = -1;
   m_shaders.at("skybox").u_locs["ProjectionMatrix"] = -1;
+
+  // screen blit shader
+  m_shaders.emplace("screen", shader_program{{{GL_VERTEX_SHADER, m_resource_path + "shaders/screen.vert"},
+                                          {GL_FRAGMENT_SHADER,  m_resource_path + "shaders/screen.frag"}}});
+  m_shaders.at("screen").u_locs["screen_tex"] = -1;
+
 }
 
 // set up star positions and color

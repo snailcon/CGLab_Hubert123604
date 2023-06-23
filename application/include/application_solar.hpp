@@ -38,6 +38,7 @@ class ApplicationSolar : public Application {
   void initializeStars(int amount, float radius, float variance);
   void initializeGeometry();
   void initializeSkyboxObject();
+  void initializeFramebuffer();
   // update uniform values
   void uploadUniforms(shader_program const& prog, bool do_translate = true) const;
   // upload projection matrix
@@ -61,6 +62,11 @@ class ApplicationSolar : public Application {
 
   // skybox model holder
   model_object skybox_object;
+
+  model_object screen_object;
+  unsigned int fbo_handle;
+  unsigned int tex_handle;
+  unsigned int rb_handle;
 
   // camera transform matrix
   glm::fmat4 m_view_transform;
