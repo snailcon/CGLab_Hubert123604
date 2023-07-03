@@ -135,7 +135,7 @@ void ApplicationSolar::render() const {
   glm::mat4 l_trans = light_nodes.at(0)->getWorldTransform();
   glm::vec3 light_pos = glm::vec3(l_trans[3][0], l_trans[3][1], l_trans[3][2]);
 
-  glBindFramebuffer(GL_FRAMEBUFFER, fbo_handle);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo_handle[0]);
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
@@ -163,6 +163,31 @@ void ApplicationSolar::render() const {
     geom->render();
   }
 
+  int ping_pong = 0;
+
+  for (auto effect : effects) {
+    if (!effect.second) continue;
+
+    ping_pong = (ping_pong+1) % 2;
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_handle[ping_pong]);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDisable(GL_DEPTH_TEST);
+
+    glUseProgram(m_shaders.at(effect.first).handle);
+
+    if (glGetUniformLocation(m_shaders.at(effect.first).handle, "screen_size") != -1) {
+      glm::vec2 temp = initial_resolution;
+      glUniform2fv(m_shaders.at(effect.first).u_locs.at("screen_size"), 1, glm::value_ptr(temp));
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex_handle[(ping_pong+1) % 2]);
+
+    glBindVertexArray(screen_object.vertex_AO);
+    glDrawArrays(screen_object.draw_mode, 0, screen_object.num_elements);
+  }
+  
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
@@ -171,7 +196,7 @@ void ApplicationSolar::render() const {
   glUseProgram(m_shaders.at("screen").handle);
 
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, tex_handle);
+  glBindTexture(GL_TEXTURE_2D, tex_handle[ping_pong]);
 
   glBindVertexArray(screen_object.vertex_AO);
   glDrawArrays(screen_object.draw_mode, 0, screen_object.num_elements);
@@ -203,25 +228,39 @@ void ApplicationSolar::uploadUniforms(shader_program const& prog, bool do_transl
 ///////////////////////////// intialisation functions /////////////////////////
 
 void ApplicationSolar::initializeFramebuffer() {
-  glGenRenderbuffers(1, &rb_handle);
-  glBindRenderbuffer(GL_RENDERBUFFER, rb_handle);
+  glGenRenderbuffers(1, &rb_handle[0]);
+  glBindRenderbuffer(GL_RENDERBUFFER, rb_handle[0]);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH32F_STENCIL8, initial_resolution.x, initial_resolution.y);
 
-  glGenTextures(1, &tex_handle);
-  glBindTexture(GL_TEXTURE_2D, tex_handle);
+  glGenTextures(1, &tex_handle[0]);
+  glBindTexture(GL_TEXTURE_2D, tex_handle[0]);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, initial_resolution.x, initial_resolution.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
   glBindTexture(GL_TEXTURE_2D, 0);
 
-  glGenFramebuffers(1, &fbo_handle);
-  glBindFramebuffer(GL_FRAMEBUFFER, fbo_handle);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tex_handle, 0);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rb_handle);
+  glGenFramebuffers(1, &fbo_handle[0]);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo_handle[0]);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tex_handle[0], 0);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rb_handle[0]);
 
-  // glDrawBuffer(GL_COLOR_ATTACHMENT0);
-  // glDrawBuffer(GL_DEPTH_ATTACHMENT);
+  glGenRenderbuffers(1, &rb_handle[1]);
+  glBindRenderbuffer(GL_RENDERBUFFER, rb_handle[1]);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH32F_STENCIL8, initial_resolution.x, initial_resolution.y);
+
+  glGenTextures(1, &tex_handle[1]);
+  glBindTexture(GL_TEXTURE_2D, tex_handle[1]);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, initial_resolution.x, initial_resolution.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  glGenFramebuffers(1, &fbo_handle[1]);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo_handle[1]);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tex_handle[1], 0);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rb_handle[1]);
 
   glBindRenderbuffer(GL_RENDERBUFFER, 0);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -308,6 +347,32 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.emplace("screen", shader_program{{{GL_VERTEX_SHADER, m_resource_path + "shaders/screen.vert"},
                                           {GL_FRAGMENT_SHADER,  m_resource_path + "shaders/screen.frag"}}});
   m_shaders.at("screen").u_locs["screen_tex"] = -1;
+
+  // mirr_vert
+  m_shaders.emplace("mirr_vert", shader_program{{{GL_VERTEX_SHADER, m_resource_path + "shaders/screen.vert"},
+                                          {GL_FRAGMENT_SHADER,  m_resource_path + "shaders/mirr_vert.frag"}}});
+  m_shaders.at("mirr_vert").u_locs["screen_tex"] = -1;
+
+  // mirr_hori
+  m_shaders.emplace("mirr_hori", shader_program{{{GL_VERTEX_SHADER, m_resource_path + "shaders/screen.vert"},
+                                          {GL_FRAGMENT_SHADER,  m_resource_path + "shaders/mirr_hori.frag"}}});
+  m_shaders.at("mirr_hori").u_locs["screen_tex"] = -1;
+
+  // grayscale
+  m_shaders.emplace("grayscale", shader_program{{{GL_VERTEX_SHADER, m_resource_path + "shaders/screen.vert"},
+                                          {GL_FRAGMENT_SHADER,  m_resource_path + "shaders/grayscale.frag"}}});
+  m_shaders.at("grayscale").u_locs["screen_tex"] = -1;
+
+  // blur
+  m_shaders.emplace("blur", shader_program{{{GL_VERTEX_SHADER, m_resource_path + "shaders/screen.vert"},
+                                          {GL_FRAGMENT_SHADER,  m_resource_path + "shaders/blur.frag"}}});
+  m_shaders.at("blur").u_locs["screen_tex"] = -1;
+  m_shaders.at("blur").u_locs["screen_size"] = -1;
+
+  effects["mirr_vert"] = false;
+  effects["mirr_hori"] = false;
+  effects["grayscale"] = false;
+  effects["blur"] = false;
 
 }
 
@@ -792,6 +857,19 @@ void ApplicationSolar::keyCallback(int key, int action, int mods) {
   }
   if (key == GLFW_KEY_KP_2  && (action == GLFW_PRESS)) {
     timescale -= 0.2f;
+  }
+
+  if (key == GLFW_KEY_7  && (action == GLFW_PRESS)) {
+    effects["mirr_vert"] = !effects["mirr_vert"];
+  }
+  if (key == GLFW_KEY_8  && (action == GLFW_PRESS)) {
+    effects["mirr_hori"] = !effects["mirr_hori"];
+  }
+  if (key == GLFW_KEY_9  && (action == GLFW_PRESS)) {
+    effects["grayscale"] = !effects["grayscale"];
+  }
+  if (key == GLFW_KEY_0  && (action == GLFW_PRESS)) {
+    effects["blur"] = !effects["blur"];
   }
 }
 

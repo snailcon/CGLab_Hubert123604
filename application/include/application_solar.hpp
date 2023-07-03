@@ -64,9 +64,10 @@ class ApplicationSolar : public Application {
   model_object skybox_object;
 
   model_object screen_object;
-  unsigned int fbo_handle;
-  unsigned int tex_handle;
-  unsigned int rb_handle;
+  unsigned int fbo_handle[2];
+  unsigned int tex_handle[2];
+  unsigned int rb_handle[2];
+  std::map<std::string, bool> effects;
 
   // camera transform matrix
   glm::fmat4 m_view_transform;

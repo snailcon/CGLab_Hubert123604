@@ -6,6 +6,7 @@ out vec4 out_Color;
 uniform sampler2D screen_tex;
 
 void main() {
-    vec3 col = texture(screen_tex, pass_UV).xyz;
+    vec2 new_UV = vec2(1.0f - pass_UV.x, pass_UV.y);
+    vec3 col = texture(screen_tex, new_UV).xyz;
     out_Color = vec4(col, 1.0f);
 }
