@@ -154,7 +154,12 @@ void ApplicationSolar::render() const {
     geom->setUniformBool("is_toon", is_toon);
     geom->setUniformFloat("toon_steps", toon_steps);
 
-    geom->setUniformFloat("normal_strength", normal_strength); 
+    geom->setUniformFloat("normal_strength", normal_strength);
+    if (geom->getName() == "sun. geom") {
+      geom->setUniformFloat("ambient_strength", 1.0f);
+    } else {
+      geom->setUniformFloat("ambient_strength", 0.0f);
+    }
 
     geom->uploadUniforms();
 
@@ -323,6 +328,7 @@ void ApplicationSolar::initializeShaderPrograms() {
   m_shaders.at("planet").u_locs["diffuse_texture"] = -1;
   m_shaders.at("planet").u_locs["normal_texture"] = -1;
   m_shaders.at("planet").u_locs["normal_strength"] = -1;
+  m_shaders.at("planet").u_locs["ambient_strength"] = -1;
 
   // star shader
   m_shaders.emplace("stars", shader_program{{{GL_VERTEX_SHADER, m_resource_path + "shaders/vao.vert"},
